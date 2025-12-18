@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">MaterialsLiveWallpaper2</string>
+    <string name="app_name">Materials Live Wallpaper 2</string>
+    <string name="title_activity_settings">Settings</string>
 </resources>

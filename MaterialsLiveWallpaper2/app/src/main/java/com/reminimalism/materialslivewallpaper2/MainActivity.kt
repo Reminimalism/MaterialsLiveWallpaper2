@@ -1,5 +1,9 @@
 package com.reminimalism.materialslivewallpaper2
 
+import android.app.WallpaperManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,7 +38,8 @@ class MainActivity : ComponentActivity()
             MaterialsLiveWallpaper2Theme {
                 Scaffold(modifier = Modifier.fillMaxSize())
                 { innerPadding ->
-                    Greeting(
+                    MainActivityView(
+                        this,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -44,7 +49,7 @@ class MainActivity : ComponentActivity()
 }
 
 @Composable
-fun Greeting(modifier: Modifier = Modifier)
+fun MainActivityView(context: Context? = null, modifier: Modifier = Modifier)
 {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center)
     {
@@ -77,7 +82,16 @@ fun Greeting(modifier: Modifier = Modifier)
             Spacer(Modifier.height(16.dp))
 
             Button(
-                onClick = {},
+                onClick = {
+                    if (context == null)
+                        return@Button
+                    val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                    intent.putExtra(
+                        WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                        ComponentName(context, MaterialsWallpaperService::class.java)
+                    )
+                    context.startActivity(intent);
+                },
                 content = {
                     Text(
                         text = "Set Wallpaper"
@@ -86,7 +100,11 @@ fun Greeting(modifier: Modifier = Modifier)
             )
 
             Button(
-                onClick = {},
+                onClick = {
+                    context?.startActivity(
+                        Intent(context, SettingsActivity::class.java)
+                    )
+                },
                 content = {
                     Text(
                         text = "Settings"
@@ -99,9 +117,9 @@ fun Greeting(modifier: Modifier = Modifier)
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview()
+fun MainActivityPreview()
 {
     MaterialsLiveWallpaper2Theme {
-        Greeting()
+        MainActivityView()
     }
 }
