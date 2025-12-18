@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -138,7 +140,10 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
             {
                 Column(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
+                        .background(
+                            color = MaterialTheme.colorScheme.background,
+                            shape = RoundedCornerShape(16.dp)
+                        )
                 )
                 {
                     Text(
@@ -149,7 +154,6 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
                     Column(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState())
-                            .fillMaxSize()
                             .padding(8.dp)
                     )
                     {
@@ -218,4 +222,11 @@ fun SettingsItemView(title: String, subtitle: String = "",
             content()
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsElementsActivityPreview()
+{
+    SettingsActivityPreview()
 }

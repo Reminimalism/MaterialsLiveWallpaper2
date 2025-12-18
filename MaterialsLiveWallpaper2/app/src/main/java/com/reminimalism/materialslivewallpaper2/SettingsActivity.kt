@@ -79,16 +79,26 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
             {
                 SettingsHeaderView("General")
 
-                val options = buildMap {
+                val options1 = buildMap {
                     for (i in 1..20)
                     {
                         put(i.toString(), "Item $i")
                     }
                 }
 
-                SettingsOptionView(preferences, "options", "Options Test",
+                val options2 = buildMap {
+                    for (i in 1..10)
+                    {
+                        put(i.toString(), "Item $i")
+                    }
+                }
+
+                SettingsOptionView(preferences, "options1", "Options Test 1",
                     "1",
-                    options)
+                    options1)
+                SettingsOptionView(preferences, "options2", "Options Test 2",
+                    "1",
+                    options2)
 
                 SettingsToggleView(preferences, "toggle", "Toggle Test")
                 for (i in 1..10)
