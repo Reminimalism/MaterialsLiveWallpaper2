@@ -1,41 +1,41 @@
 package com.reminimalism.materialslivewallpaper2
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.hardware.SensorManager
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class MaterialsWallpaperRenderer(val context: Context) : GLSurfaceView.Renderer
+class MaterialsWallpaperRenderer(context: Context) : GLSurfaceView.Renderer
 {
-    private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val preferences: SharedPreferences = getAppPreferences(context)
+    val componentContainer = ComponentContainer(listOf(
+        PreferencesComponent(context),
+        SensorsComponent(context)
+    ))
 
     init
     {
-        // TODO
+        componentContainer.initialize()
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?)
     {
-        // TODO
+        componentContainer.start()
     }
 
     fun onPause()
     {
-        // TODO
+        componentContainer.pause()
     }
 
     fun onResume()
     {
-        // TODO
+        componentContainer.resume()
     }
 
     fun onDestroy()
     {
-        // TODO
+        componentContainer.stop()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int)
@@ -46,6 +46,6 @@ class MaterialsWallpaperRenderer(val context: Context) : GLSurfaceView.Renderer
 
     override fun onDrawFrame(gl: GL10?)
     {
-        // TODO
+        componentContainer.update()
     }
 }
