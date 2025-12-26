@@ -3,7 +3,6 @@ package com.reminimalism.materialslivewallpaper2
 import android.app.ActivityManager
 import android.content.Context
 import android.opengl.GLSurfaceView
-import android.opengl.GLSurfaceView.Renderer
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
 
@@ -40,7 +39,7 @@ class MaterialsWallpaperService : WallpaperService()
 
             val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val configurationInfo = activityManager.deviceConfigurationInfo
-            val supportsES20 = configurationInfo.reqGlEsVersion >= 0x20000;
+            val supportsES20 = configurationInfo.reqGlEsVersion >= 0x20000
 
             if (!supportsES20)
                 return

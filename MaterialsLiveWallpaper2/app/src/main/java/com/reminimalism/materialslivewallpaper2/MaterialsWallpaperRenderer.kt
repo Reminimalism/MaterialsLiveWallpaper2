@@ -8,7 +8,7 @@ import javax.microedition.khronos.opengles.GL10
 
 class MaterialsWallpaperRenderer(context: Context) : GLSurfaceView.Renderer
 {
-    val componentContainer = ComponentContainer(listOf(
+    private val componentContainer = ComponentContainer(listOf(
         PreferencesComponent(context),
         SensorsComponent(context)
     ))

@@ -38,7 +38,7 @@ class SensorsComponent(context: Context) : Component()
 
     override fun start()
     {
-        register();
+        register()
     }
 
     override fun update()

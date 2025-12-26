@@ -21,9 +21,9 @@ class PreferencesComponent(context: Context) : Component()
 
     private fun invokeChange(key: String)
     {
-        keyToComponentListeners[key]?.forEach({ componentListeners ->
+        keyToComponentListeners[key]?.forEach { componentListeners ->
             componentListeners.value.invoke()
-        })
+        }
     }
 
     /**
