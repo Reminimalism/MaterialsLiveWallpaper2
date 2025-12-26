@@ -65,6 +65,7 @@ class PreferencesComponent(context: Context) : Component()
     {
         for (changedKey in changedKeys)
             invokeChange(changedKey)
+        changedKeys.clear()
     }
 
     override fun stop()
