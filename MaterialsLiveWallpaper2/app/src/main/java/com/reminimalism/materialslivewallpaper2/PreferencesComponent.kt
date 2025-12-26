@@ -27,26 +27,29 @@ class PreferencesComponent(context: Context) : Component()
     }
 
     /**
-     * Can only add one listener per key per component
+     * Can only set one listener per key per component
+     * Multiple listeners for one key by one component isn't supported.
+     * @param owner The listener component. This will be used for unregistering as well.
      * @param key The preference key to listen to changes to.
      */
-    fun registerListener(component: Component, key: String, listener: () -> Unit)
+    fun registerListener(owner: Component, key: String, listener: () -> Unit)
     {
         val components = keyToComponentListeners.getOrPut(key) { mutableMapOf() }
-        val keys = componentToKeys.getOrPut(component) { mutableSetOf() }
+        val keys = componentToKeys.getOrPut(owner) { mutableSetOf() }
         keys.add(key)
-        components[component] = listener
+        components[owner] = listener
     }
 
     /**
      * Removes all the listeners registered by the component.
+     * @param owner The listener component that has registered listeners previously.
      */
-    fun unregisterListeners(component: Component)
+    fun unregisterListeners(owner: Component)
     {
-        componentToKeys[component]?.forEach{ key ->
-            keyToComponentListeners[key]?.remove(component)
+        componentToKeys[owner]?.forEach{ key ->
+            keyToComponentListeners[key]?.remove(owner)
         }
-        componentToKeys.remove(component)
+        componentToKeys.remove(owner)
     }
 
     override fun initialize()
