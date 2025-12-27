@@ -11,6 +11,7 @@ class PreferencesComponent(context: Context) : Component()
     private val componentToKeys = mutableMapOf<Component, MutableSet<String>>()
 
     private val changedKeys = mutableSetOf<String>()
+    private val currentCallbacks = mutableSetOf<() -> Unit>()
 
     private val preferencesChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { pref, key ->
         if (pref == preferences && key != null)
@@ -19,10 +20,10 @@ class PreferencesComponent(context: Context) : Component()
         }
     }
 
-    private fun invokeChange(key: String)
+    private fun addToCurrentCallbacks(key: String)
     {
-        keyToComponentListeners[key]?.forEach { componentListeners ->
-            componentListeners.value.invoke()
+        keyToComponentListeners[key]?.forEach { componentListener ->
+            currentCallbacks.add { componentListener.value }
         }
     }
 
@@ -34,10 +35,30 @@ class PreferencesComponent(context: Context) : Component()
      */
     fun registerListener(owner: Component, key: String, listener: () -> Unit)
     {
-        val components = keyToComponentListeners.getOrPut(key) { mutableMapOf() }
         val keys = componentToKeys.getOrPut(owner) { mutableSetOf() }
+        val components = keyToComponentListeners.getOrPut(key) { mutableMapOf() }
         keys.add(key)
         components[owner] = listener
+    }
+
+    /**
+     * Sets a shared listener for multiple keys' changes.
+     * This is useful to get one callback for any number of changes
+     * done to any number of the keys.
+     * Can only set one listener per key per component
+     * Multiple listeners for one key by one component isn't supported.
+     * @param owner The listener component. This will be used for unregistering as well.
+     * @param keys The preference keys to listen to changes to.
+     */
+    fun registerListener(owner: Component, keys: Collection<String>, listener: () -> Unit)
+    {
+        val componentKeys = componentToKeys.getOrPut(owner) { mutableSetOf() }
+        for (key in keys)
+        {
+            val components = keyToComponentListeners.getOrPut(key) { mutableMapOf() }
+            componentKeys.add(key)
+            components[owner] = listener
+        }
     }
 
     /**
@@ -63,9 +84,17 @@ class PreferencesComponent(context: Context) : Component()
 
     override fun update()
     {
+        if (changedKeys.isEmpty())
+            return
+
+        currentCallbacks.clear()
         for (changedKey in changedKeys)
-            invokeChange(changedKey)
+            addToCurrentCallbacks(changedKey)
         changedKeys.clear()
+
+        for (callback in currentCallbacks)
+            callback.invoke()
+        currentCallbacks.clear()
     }
 
     override fun stop()
