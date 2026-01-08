@@ -5,60 +5,90 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class GLMesh(positions: FloatArray, uvs: FloatArray, indices: ShortArray)
+class GLMesh(
+    positions: FloatArray = getDefaultPositions(),
+    normals: FloatArray = getDefaultNormals(),
+    tangents: FloatArray = getDefaultTangents(),
+    uvs: FloatArray = getDefaultUVs(),
+    indices: ShortArray = getDefaultIndices())
 {
     private val bufferObjects = IntArray(3)
     private val positionsIndex = 0
-    private val uvsIndex = 1
-    private val indicesIndex = 2
+    private val normalsIndex = 1
+    private val tangentsIndex = 2
+    private val uvsIndex = 3
+    private val indicesIndex = 4
 
     private var indicesSize = indices.size
 
     private var isCleanedUp = false
 
-    // Note for loading custom models:
-    // This works alright: 65535.toShort()
-    // Can read indices (if read) as long,
-    // and fail if they exceed uint,
-    // else, convert to short if in unsigned short range,
-    // else, convert to int if in unsigned int range.
+    companion object
+    {
+        fun getDefaultPositions() = floatArrayOf(
+            -1f, -1f, 0f,
+            +1f, -1f, 0f,
+            +1f, +1f, 0f,
+            -1f, +1f, 0f
+        )
+
+        fun getDefaultNormals() = floatArrayOf(
+            0f, 0f, 1f,
+            0f, 0f, 1f,
+            0f, 0f, 1f,
+            0f, 0f, 1f
+        )
+
+        fun getDefaultTangents() = floatArrayOf(
+            1f, 0f, 0f,
+            1f, 0f, 0f,
+            1f, 0f, 0f,
+            1f, 0f, 0f
+        )
+
+        fun getDefaultUVs() = floatArrayOf(
+            0f, 0f,
+            1f, 0f,
+            1f, 1f,
+            0f, 1f
+        )
+
+        fun getDefaultIndices() = shortArrayOf(
+            0, 1, 2,
+            0, 2, 3
+        )
+    }
 
     init
     {
         createBuffers()
 
-        if (!setupBuffers(positions, uvs, indices))
+        if (indices.isEmpty() || !setupBuffers(positions, normals, tangents, uvs, indices))
         {
             // Fall back to a default simple quad
             setupBuffers(
-                floatArrayOf(
-                    -1f, -1f, 0f,
-                    +1f, -1f, 0f,
-                    +1f, +1f, 0f,
-                    -1f, +1f, 0f
-                ),
-                floatArrayOf(
-                    0f, 0f,
-                    1f, 0f,
-                    1f, 1f,
-                    0f, 1f
-                ),
-                shortArrayOf(
-                    0, 1, 2,
-                    0, 2, 3
-                )
+                getDefaultPositions(),
+                getDefaultNormals(),
+                getDefaultTangents(),
+                getDefaultUVs(),
+                getDefaultIndices()
             )
         }
     }
 
-    fun changeBuffers(positions: FloatArray, uvs: FloatArray, indices: ShortArray): Boolean
+    fun changeBuffers(
+            positions: FloatArray,
+            normals: FloatArray,
+            tangents: FloatArray,
+            uvs: FloatArray,
+            indices: ShortArray): Boolean
     {
         if (isCleanedUp)
         {
             Logger.logInternalError("Trying to change buffers on a cleaned up GLMesh.")
             return false
         }
-        return setupBuffers(positions, uvs, indices)
+        return setupBuffers(positions, normals, tangents, uvs, indices)
     }
 
     fun draw(program: GLProgram)
@@ -76,6 +106,8 @@ class GLMesh(positions: FloatArray, uvs: FloatArray, indices: ShortArray)
         }
 
         bindFloatVertexBuffer(program.getPositionLocation(), positionsIndex, 3)
+        bindFloatVertexBuffer(program.getNormalLocation(), normalsIndex, 3)
+        bindFloatVertexBuffer(program.getTangentLocation(), tangentsIndex, 3)
         bindFloatVertexBuffer(program.getUVLocation(), uvsIndex, 2)
 
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, bufferObjects[indicesIndex])
@@ -108,38 +140,53 @@ class GLMesh(positions: FloatArray, uvs: FloatArray, indices: ShortArray)
         GLES20.glGenBuffers(bufferObjects.size, bufferObjects, 0)
     }
 
-    private fun setupBuffers(positions: FloatArray, uvs: FloatArray, indices: ShortArray): Boolean
+    private fun setupBuffers(
+            positions: FloatArray,
+            normals: FloatArray,
+            tangents: FloatArray,
+            uvs: FloatArray,
+            indices: ShortArray): Boolean
     {
+        if (indices.size % 3 != 0)
+        {
+            Logger.logUserError("Mesh indices aren't a divisible by 3.")
+            return false
+        }
         for (i in indices)
         {
             val ui = i.toUShort().toInt()
-            if (ui >= positions.size || ui >= uvs.size)
+            if (ui >= positions.size || ui >= normals.size || ui >= tangents.size || ui >= uvs.size)
             {
                 Logger.logUserError("Mesh indices are out of vertex bounds.")
                 return false
             }
         }
 
-        val positionsBuffer = ByteBuffer.allocateDirect(positions.size * 4)
+        setupFloatVertexBuffer(positionsIndex, positions)
+        setupFloatVertexBuffer(normalsIndex, normals)
+        setupFloatVertexBuffer(tangentsIndex, tangents)
+        setupFloatVertexBuffer(uvsIndex, uvs)
+
+        setupShortIndexBuffer(indices)
+
+        return true
+    }
+
+    private fun setupFloatVertexBuffer(bufferObjectIndex: Int, data: FloatArray)
+    {
+        val buffer = ByteBuffer.allocateDirect(data.size * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
-            .put(positions)
+            .put(data)
             .position(0)
 
-        setupGLBufferObject(positionsIndex, GLES20.GL_ARRAY_BUFFER, positionsBuffer, positions.size * 4)
+        setupGLBufferObject(bufferObjectIndex, GLES20.GL_ARRAY_BUFFER, buffer, data.size * 4)
 
-        positionsBuffer.clear()
+        buffer.clear()
+    }
 
-        val uvBuffer = ByteBuffer.allocateDirect(uvs.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .put(uvs)
-            .position(0)
-
-        setupGLBufferObject(uvsIndex, GLES20.GL_ARRAY_BUFFER, uvBuffer, uvs.size * 4)
-
-        uvBuffer.clear()
-
+    private fun setupShortIndexBuffer(indices: ShortArray)
+    {
         val indexBuffer = ByteBuffer.allocateDirect(indices.size * 2)
             .order(ByteOrder.nativeOrder())
             .asShortBuffer()
@@ -151,8 +198,6 @@ class GLMesh(positions: FloatArray, uvs: FloatArray, indices: ShortArray)
         indexBuffer.clear()
 
         indicesSize = indices.size
-
-        return true
     }
 
     private fun setupGLBufferObject(bufferObjectIndex: Int, target: Int, buffer: Buffer, size: Int)

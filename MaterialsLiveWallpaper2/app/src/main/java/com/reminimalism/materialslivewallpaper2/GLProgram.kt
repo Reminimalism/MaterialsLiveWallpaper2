@@ -5,27 +5,20 @@ import android.opengl.GLES20
 class GLProgram(vertexShader: String, fragmentShader: String)
 {
     private val position = "position"
+    private val normal = "normal"
+    private val tangent = "tangent"
     private val uv = "uv"
 
     private var programHandle: Int = 0
 
     private var positionLocation: Int = 0
+    private var normalLocation: Int = 0
+    private var tangentLocation: Int = 0
     private var uvLocation: Int = 0
 
     init
     {
-        setupProgram(vertexShader, fragmentShader)
-
-        if (programHandle == 0)
-        {
-            positionLocation = 0
-            uvLocation = 0
-        }
-        else
-        {
-            positionLocation = GLES20.glGetAttribLocation(programHandle, position)
-            uvLocation = GLES20.glGetAttribLocation(programHandle, uv)
-        }
+        setupProgramAndLocations(vertexShader, fragmentShader)
     }
 
     fun draw(mesh: GLMesh)
@@ -50,9 +43,39 @@ class GLProgram(vertexShader: String, fragmentShader: String)
         return positionLocation
     }
 
+    fun getNormalLocation(): Int
+    {
+        return normalLocation
+    }
+
+    fun getTangentLocation(): Int
+    {
+        return tangentLocation
+    }
+
     fun getUVLocation(): Int
     {
         return uvLocation
+    }
+
+    private fun setupProgramAndLocations(vertexShader: String, fragmentShader: String)
+    {
+        setupProgram(vertexShader, fragmentShader)
+
+        if (programHandle == 0)
+        {
+            positionLocation = 0
+            normalLocation = 0
+            tangentLocation = 0
+            uvLocation = 0
+        }
+        else
+        {
+            positionLocation = GLES20.glGetAttribLocation(programHandle, position)
+            normalLocation = GLES20.glGetAttribLocation(programHandle, normal)
+            tangentLocation = GLES20.glGetAttribLocation(programHandle, tangent)
+            uvLocation = GLES20.glGetAttribLocation(programHandle, uv)
+        }
     }
 
     private fun setupProgram(vertexShader: String, fragmentShader: String)

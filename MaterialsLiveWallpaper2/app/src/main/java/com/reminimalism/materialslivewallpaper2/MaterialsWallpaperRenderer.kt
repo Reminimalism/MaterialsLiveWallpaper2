@@ -10,7 +10,9 @@ class MaterialsWallpaperRenderer(context: Context) : GLSurfaceView.Renderer
 {
     private val componentContainer = ComponentContainer(listOf(
         PreferencesComponent(context),
-        SensorsComponent(context)
+        SensorsComponent(context),
+        MeshComponent(),
+        RendererComponent()
     ))
 
     init

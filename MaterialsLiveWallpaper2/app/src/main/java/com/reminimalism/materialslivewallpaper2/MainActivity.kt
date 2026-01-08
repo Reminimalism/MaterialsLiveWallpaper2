@@ -39,8 +39,8 @@ class MainActivity : ComponentActivity()
                 Scaffold(modifier = Modifier.fillMaxSize())
                 { innerPadding ->
                     MainActivityView(
-                        this,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        this
                     )
                 }
             }
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity()
 }
 
 @Composable
-fun MainActivityView(context: Context? = null, modifier: Modifier = Modifier)
+fun MainActivityView(modifier: Modifier = Modifier, context: Context? = null)
 {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center)
     {
@@ -90,7 +90,7 @@ fun MainActivityView(context: Context? = null, modifier: Modifier = Modifier)
                         WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
                         ComponentName(context, MaterialsWallpaperService::class.java)
                     )
-                    context.startActivity(intent);
+                    context.startActivity(intent)
                 },
                 content = {
                     Text(

@@ -1,8 +1,8 @@
 package com.reminimalism.materialslivewallpaper2
 
-class GLProgramConstants
+object GLProgramConstants
 {
-    private val vertexShader = """
+    val vertexShader = """
         attribute vec3 position;
         attribute vec3 normal;
         attribute vec3 tangent;
@@ -23,7 +23,7 @@ class GLProgramConstants
         }
     """.trimIndent()
 
-    private val fragmentShader = """
+    val fragmentShader = """
         precision highp float;
         
         varying vec3 frag_normal;
