@@ -106,7 +106,9 @@ class GLProgram(vertexShader: String, fragmentShader: String)
         GLES20.glAttachShader(programHandle, fragHandle)
 
         GLES20.glBindAttribLocation(programHandle, 0, position)
-        GLES20.glBindAttribLocation(programHandle, 1, uv)
+        GLES20.glBindAttribLocation(programHandle, 1, normal)
+        GLES20.glBindAttribLocation(programHandle, 2, tangent)
+        GLES20.glBindAttribLocation(programHandle, 3, uv)
 
         GLES20.glLinkProgram(programHandle)
 
