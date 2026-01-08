@@ -12,7 +12,7 @@ class GLMesh(
     uvs: FloatArray = getDefaultUVs(),
     indices: ShortArray = getDefaultIndices())
 {
-    private val bufferObjects = IntArray(3)
+    private val bufferObjects = IntArray(5)
     private val positionsIndex = 0
     private val normalsIndex = 1
     private val tangentsIndex = 2

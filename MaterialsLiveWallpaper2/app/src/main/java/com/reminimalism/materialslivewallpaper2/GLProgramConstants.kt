@@ -16,9 +16,9 @@ object GLProgramConstants
         
         void main()
         {
-            gl_Position = vec4(position, 1.0);
-            frag_normal = transform * normal;
-            frag_tangent = transform * tangent;
+            gl_Position = vec4(position, 1.0); // TODO: Transform the square to phone screen
+            frag_normal = normal; // TODO: Transform rotation
+            frag_tangent = tangent; // TODO: Transform rotation
             frag_uv = uv;
         }
     """.trimIndent()
@@ -32,8 +32,8 @@ object GLProgramConstants
         
         void main()
         {
-            frag_bitangent = cross(normal, tangent);
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            vec3 frag_bitangent = cross(frag_normal, frag_tangent);
+            gl_FragColor = vec4(frag_uv.x, frag_uv.y, 1.0, 1.0);
         }
     """.trimIndent()
 }

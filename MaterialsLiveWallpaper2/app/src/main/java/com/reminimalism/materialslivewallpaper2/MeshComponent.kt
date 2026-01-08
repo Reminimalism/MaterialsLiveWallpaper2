@@ -18,6 +18,7 @@ class MeshComponent : Component()
 
     override fun start()
     {
+        meshes.add(GLMesh())
     }
 
     override fun update()

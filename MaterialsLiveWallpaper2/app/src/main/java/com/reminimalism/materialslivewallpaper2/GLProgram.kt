@@ -21,6 +21,11 @@ class GLProgram(vertexShader: String, fragmentShader: String)
         setupProgramAndLocations(vertexShader, fragmentShader)
     }
 
+    fun use()
+    {
+        GLES20.glUseProgram(programHandle)
+    }
+
     fun draw(mesh: GLMesh)
     {
         if (programHandle == 0)
@@ -131,8 +136,8 @@ class GLProgram(vertexShader: String, fragmentShader: String)
         val shaderHandle = GLES20.glCreateShader(shaderType)
         if (shaderHandle == 0)
         {
-            Logger.logInternalError("Could not create shader")
-            GLES20.glDeleteShader(shaderHandle)
+            val error = GLES20.glGetError()
+            Logger.logInternalError("Could not create shader: $error")
             return 0
         }
         GLES20.glShaderSource(shaderHandle, source)
@@ -141,7 +146,8 @@ class GLProgram(vertexShader: String, fragmentShader: String)
         GLES20.glGetShaderiv(shaderHandle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
         if (compileStatus[0] == 0)
         {
-            Logger.logUserError("Shader compile error: " + GLES20.glGetShaderInfoLog(shaderHandle))
+            val error = GLES20.glGetShaderInfoLog(shaderHandle)
+            Logger.logUserError("Shader compile error: $error")
             GLES20.glDeleteShader(shaderHandle)
             return 0
         }

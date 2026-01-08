@@ -6,11 +6,11 @@ object Logger
 {
     fun logInternalError(text: String)
     {
-        Log.d("InternalError", text)
+        Log.e("InternalError", text)
     }
 
     fun logUserError(text: String)
     {
-        Log.d("UserError", text)
+        Log.e("UserError", text)
     }
 }
