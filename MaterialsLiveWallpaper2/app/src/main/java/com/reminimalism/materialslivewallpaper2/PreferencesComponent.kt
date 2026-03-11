@@ -27,6 +27,8 @@ class PreferencesComponent(context: Context) : Component()
         }
     }
 
+    fun getPreferences() = preferences
+
     /**
      * Can only set one listener per key per component
      * Multiple listeners for one key by one component isn't supported.

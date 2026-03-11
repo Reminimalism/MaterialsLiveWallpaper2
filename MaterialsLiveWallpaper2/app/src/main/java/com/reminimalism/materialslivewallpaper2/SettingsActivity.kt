@@ -48,6 +48,8 @@ fun getAppPreferences(context: Context): SharedPreferences
     return context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 }
 
+val ROTATION_SMOOTHING = "smoothRotation"
+
 @Composable
 fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null)
 {

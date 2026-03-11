@@ -9,12 +9,18 @@ class GLProgram(vertexShader: String, fragmentShader: String)
     private val tangent = "tangent"
     private val uv = "uv"
 
+    private val transform = "transform"
+    private val rotation = "rotation"
+
     private var programHandle: Int = 0
 
     private var positionLocation: Int = 0
     private var normalLocation: Int = 0
     private var tangentLocation: Int = 0
     private var uvLocation: Int = 0
+
+    private var transformLocation: Int = 0
+    private var rotationLocation: Int = 0
 
     init
     {
@@ -24,6 +30,12 @@ class GLProgram(vertexShader: String, fragmentShader: String)
     fun use()
     {
         GLES20.glUseProgram(programHandle)
+    }
+
+    fun setParams(transform: FloatArray, rotation: FloatArray)
+    {
+        GLES20.glUniformMatrix4fv(transformLocation, 1, false, transform, 0)
+        GLES20.glUniformMatrix3fv(rotationLocation, 1, true, rotation, 0)
     }
 
     fun draw(mesh: GLMesh)
@@ -73,6 +85,9 @@ class GLProgram(vertexShader: String, fragmentShader: String)
             normalLocation = 0
             tangentLocation = 0
             uvLocation = 0
+
+            transformLocation = 0
+            rotationLocation = 0
         }
         else
         {
@@ -80,6 +95,9 @@ class GLProgram(vertexShader: String, fragmentShader: String)
             normalLocation = GLES20.glGetAttribLocation(programHandle, normal)
             tangentLocation = GLES20.glGetAttribLocation(programHandle, tangent)
             uvLocation = GLES20.glGetAttribLocation(programHandle, uv)
+
+            transformLocation = GLES20.glGetUniformLocation(programHandle, transform)
+            rotationLocation = GLES20.glGetUniformLocation(programHandle, rotation)
         }
     }
 

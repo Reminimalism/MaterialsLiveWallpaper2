@@ -13,12 +13,13 @@ object GLProgramConstants
         varying vec2 frag_uv;
         
         uniform mat4 transform;
+        uniform mat3 rotation;
         
         void main()
         {
-            gl_Position = vec4(position, 1.0); // TODO: Transform the square to phone screen
-            frag_normal = normal; // TODO: Transform rotation
-            frag_tangent = tangent; // TODO: Transform rotation
+            gl_Position = transform * vec4(position, 1.0);
+            frag_normal = rotation * normal;
+            frag_tangent = rotation * tangent;
             frag_uv = uv;
         }
     """.trimIndent()
@@ -30,10 +31,22 @@ object GLProgramConstants
         varying vec3 frag_tangent;
         varying vec2 frag_uv;
         
+        //uniform mat3 rotation;
+        
         void main()
         {
-            vec3 frag_bitangent = cross(frag_normal, frag_tangent);
+            vec3 normal = normalize(frag_normal);
+            vec3 tangent = normalize(frag_tangent);
+            vec3 bitangent = cross(normal, tangent);
             gl_FragColor = vec4(frag_uv.x, frag_uv.y, 1.0, 1.0);
+            
+            // Rotation test
+            //vec3 v = vec3(
+            //    float(frag_uv.x < 0.5) * float(frag_uv.y < 0.5),
+            //    float(frag_uv.x >= 0.5) * float(frag_uv.y < 0.5),
+            //    float(frag_uv.y >= 0.5)
+            //);
+            //gl_FragColor = vec4(rotation * v, 1.0);
         }
     """.trimIndent()
 }
