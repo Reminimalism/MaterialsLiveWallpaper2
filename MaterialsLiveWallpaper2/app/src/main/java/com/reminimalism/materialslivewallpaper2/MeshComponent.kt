@@ -27,5 +27,13 @@ class MeshComponent : Component()
 
     override fun stop()
     {
+        clearMeshes()
+    }
+
+    private fun clearMeshes()
+    {
+        for (mesh in meshes)
+            mesh.destroy()
+        meshes.clear()
     }
 }

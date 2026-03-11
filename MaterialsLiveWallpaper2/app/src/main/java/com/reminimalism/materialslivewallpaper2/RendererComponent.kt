@@ -71,5 +71,6 @@ class RendererComponent : Component()
 
     override fun stop()
     {
+        program?.destroy()
     }
 }
