@@ -11,8 +11,7 @@ class RendererComponent : Component()
 
     private var aspect: Float = 1f
 
-    // TODO: Translate the aspect to transform.
-    //       Also maybe think about having different transforms or something
+    // TODO: Maybe think about having different transforms or something
     //       in a way to control anchor,
     //       maybe even per vertex anchor (not different transforms)?
     //       Like being centered, or scaled around one of the 4 corners?
@@ -56,7 +55,8 @@ class RendererComponent : Component()
         program?.use()
         program?.setParams(
             transform,
-            sensorsComponent?.getRotationMatrix() ?: defaultRotation
+            sensorsComponent?.getRotationMatrix() ?: defaultRotation,
+            0.2f
         )
         meshComponent?.let {
             for (mesh in it.getMeshes())
@@ -67,6 +67,17 @@ class RendererComponent : Component()
     fun updateSurface(width: Int, height: Int)
     {
         aspect = width.toFloat() / height.toFloat()
+
+        if (aspect < 1f && aspect != 0f)
+        {
+            transform[0] = 1f / aspect
+            transform[5] = 1f
+        }
+        else
+        {
+            transform[0] = 1f
+            transform[5] = aspect
+        }
     }
 
     override fun stop()
