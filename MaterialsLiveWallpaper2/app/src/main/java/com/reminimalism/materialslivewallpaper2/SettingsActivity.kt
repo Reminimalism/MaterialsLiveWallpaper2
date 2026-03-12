@@ -81,6 +81,13 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
             {
                 SettingsHeaderView("General")
 
+                SettingsToggleView(
+                    preferences, ROTATION_SMOOTHING, "Rotation Smoothing",
+                    "Smoothes out the rotation sensor data.",
+                    "Uses raw sensor rotation data. Not recommended.",
+                    true
+                )
+
                 val options1 = buildMap {
                     for (i in 1..20)
                     {
