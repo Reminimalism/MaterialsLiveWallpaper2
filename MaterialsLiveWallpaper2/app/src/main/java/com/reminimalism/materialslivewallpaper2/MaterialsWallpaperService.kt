@@ -68,10 +68,14 @@ class MaterialsWallpaperService : WallpaperService()
 
         override fun onDestroy()
         {
-            super.onDestroy()
-
+            // TODO: Debug: Where's the GL error coming from when closing the wallpaper preview?
+            // Logcat error: call to OpenGL ES API with no current context (logged once per thread).
+            // When: 1. Go to the app, 2. Click 'Set Wallpaper', 3. Go back => Here it happens.
+            // Find out: Where to destroy these?
             renderer?.onDestroy()
             glSurfaceView?.onDestroy()
+
+            super.onDestroy()
         }
     }
 }
