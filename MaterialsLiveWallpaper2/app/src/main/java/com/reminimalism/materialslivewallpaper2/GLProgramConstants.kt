@@ -8,14 +8,14 @@ object GLProgramConstants
         attribute vec3 tangent;
         attribute vec2 uv;
         
+        uniform mat4 transform;
+        uniform mat3 rotation;
+        uniform float fov_tangent;
+        
         varying vec3 frag_normal;
         varying vec3 frag_tangent;
         varying vec3 frag_view;
         varying vec2 frag_uv;
-        
-        uniform mat4 transform;
-        uniform mat3 rotation;
-        uniform float fov_tangent;
         
         void main()
         {
@@ -35,16 +35,21 @@ object GLProgramConstants
         varying vec3 frag_view;
         varying vec2 frag_uv;
         
-        //uniform mat3 rotation;
-        
         vec3 sample_env(vec3 dir)
         {
-            float light = float(dir.z >= 0.1) * max(0.0, dir.z - 0.1);
             vec2 plane = dir.xy / dir.z;
-            light *= float( int(mod((plane.x - 0.1) * 5.0, 2.0)) )
-                   * float( int(mod((plane.y - 0.1) * 5.0, 2.0)) );
-            float ambient = 0.1 + 0.2 * (dir.z * dir.z);
-            float color = max(ambient, light);
+            
+            vec2 planemod = mod(plane * 5.0, 2.0);
+            float light = float(dir.z >= 0.02) * max(0.0, dir.z - 0.02);
+            light *= floor(planemod.x) * floor(planemod.y);
+            
+            planemod = mod(plane * 10.0, 2.0);
+            float tiles = float(dir.z <= -0.02) * max(0.0, -dir.z - 0.02);
+            tiles *= float(planemod.x >= 0.2) * float(planemod.y >= 0.2);
+            
+            float ambient = 1.0 - dir.z * dir.z;
+            ambient = 0.05 + 0.1 * ambient * ambient;
+            float color = ambient + light * 2.0 + tiles;
             return vec3(color, color, color);
         }
         
@@ -60,6 +65,13 @@ object GLProgramConstants
             return rand(rand(seed.x) + seed.y);
         }
         
+        vec3 tone_map(vec3 color)
+        {
+            float max_color = max(max(color.x, color.y), color.z);
+            float scale = 10.0 / (max_color + 10.0);
+            return color * scale + max(0.0, (0.9 - scale));
+        }
+        
         void main()
         {
             vec3 normal = normalize(frag_normal);
@@ -68,7 +80,8 @@ object GLProgramConstants
             vec3 view = normalize(frag_view);
             
             // Gold material shader fun test
-            float roughness = frag_uv.y * frag_uv.y * 0.2;
+            //float roughness = frag_uv.y * frag_uv.y * 0.2;
+            float roughness = mod(floor(frag_uv.x * 8.0) + floor(frag_uv.y * 8.0), 3.0) * (0.2/2.0);
             vec2 radius = vec2(
                 roughness,
                 roughness
@@ -90,9 +103,9 @@ object GLProgramConstants
                 }
             }
             env /= sum;
-            vec3 col = vec3(1.0, 0.8 + roughness * 0.1, 0.35 + roughness * 0.325) * env; // Gold
-            //vec3 col = env; // Silver
-            gl_FragColor = vec4(col, 1.0);
+            vec3 col = vec3(1.0, 0.8, 0.35) * env;
+            col = tone_map(col);
+            gl_FragColor = vec4(sqrt(col), 1.0);
             
             // UV test
             //gl_FragColor = vec4(frag_uv.x, frag_uv.y, 1.0, 1.0);
@@ -106,14 +119,6 @@ object GLProgramConstants
             
             // View test
             //gl_FragColor = vec4(view * 0.5 + 0.5, 1.0);
-            
-            // Rotation test
-            //vec3 v = vec3(
-            //    float(frag_uv.x < 0.5) * float(frag_uv.y < 0.5),
-            //    float(frag_uv.x >= 0.5) * float(frag_uv.y < 0.5),
-            //    float(frag_uv.y >= 0.5)
-            //);
-            //gl_FragColor = vec4(rotation * v, 1.0);
         }
     """.trimIndent()
 }
