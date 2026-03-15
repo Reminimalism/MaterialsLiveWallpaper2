@@ -33,9 +33,12 @@ object GLProgramConstants
         #ifndef ANISOTROPY
             #define ANISOTROPY 1
         #endif
-        
         #ifndef ANISOTROPY_SAMPLES
             #define ANISOTROPY_SAMPLES 4
+        #endif
+        
+        #ifndef CLEAR_COAT
+            #define CLEAR_COAT 0
         #endif
         
         varying vec3 frag_normal;
@@ -62,6 +65,12 @@ object GLProgramConstants
             vec3 normal;
             float roughness;
             vec2 anisotropy;
+            
+            #if CLEAR_COAT
+            vec3 coat_normal;
+            float coat_specular;
+            float coat_roughness;
+            #endif
         };
         
         vec3 sample_env(vec3 dir, float roughness)
@@ -119,6 +128,13 @@ object GLProgramConstants
             result.normal = vec3(0.0, 0.0, 1.0);
             result.roughness = 0.02 + 0.08 * in_circle;
             result.anisotropy = normalize(uv_centered) * 0.1 * in_circle;
+            
+            #if CLEAR_COAT
+            result.coat_normal = vec3(0.0, 0.0, 1.0);
+            result.coat_specular = 0.05;
+            result.coat_roughness = 0.0;
+            #endif
+            
             return result;
             
             // TODO:
@@ -127,6 +143,7 @@ object GLProgramConstants
             // or on CPU if numbers are given directly.
             // Have to test, but this could give
             // a more useful range to work with.
+            // Maybe not and just keep the linearity instead.
         }
         
         vec3 tone_map(vec3 color)
@@ -159,15 +176,15 @@ object GLProgramConstants
         
         void main()
         {
-            vec3 normal = normalize(frag_normal);
+            vec3 mesh_normal = normalize(frag_normal);
             vec3 tangent = normalize(frag_tangent);
-            vec3 bitangent = cross(normal, tangent);
+            vec3 bitangent = cross(mesh_normal, tangent);
             vec3 view = normalize(frag_view);
             
             Surface surface = get_surface(frag_uv);
-            normal = surface.normal.z * normal
-                   + surface.normal.x * tangent
-                   + surface.normal.y * bitangent;
+            vec3 normal = surface.normal.z * mesh_normal
+                        + surface.normal.x * tangent
+                        + surface.normal.y * bitangent;
             
             // Fresnel
             // Probably no need for fresnel really as it's not meaningful in wallpaper usage
@@ -178,6 +195,9 @@ object GLProgramConstants
             );
             surface.specular += (vec3(1.0, 1.0, 1.0) - surface.specular) * fresnel;
             surface.diffuse *= (1.0 - fresnel);
+            #if CLEAR_COAT
+            surface.coat_specular += (1.0 - surface.coat_specular) * fresnel;
+            #endif
             
             #if ANISOTROPY
             
@@ -209,6 +229,19 @@ object GLProgramConstants
             #else
             
             vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal);
+            
+            #endif
+            
+            #if CLEAR_COAT
+            
+            vec3 coat_normal = surface.coat_normal.z * mesh_normal
+                             + surface.coat_normal.x * tangent
+                             + surface.coat_normal.y * bitangent;
+            
+            color = (1.0 - surface.coat_specular) * color + calculate_specular(
+                vec3(surface.coat_specular, surface.coat_specular, surface.coat_specular),
+                surface.coat_roughness, view, mesh_normal
+            );
             
             #endif
             
