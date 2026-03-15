@@ -35,7 +35,7 @@ object GLProgramConstants
         #endif
         
         #ifndef ANISOTROPY_SAMPLES
-            #define ANISOTROPY_SAMPLES 8
+            #define ANISOTROPY_SAMPLES 4
         #endif
         
         varying vec3 frag_normal;
@@ -57,9 +57,9 @@ object GLProgramConstants
         
         struct Surface
         {
-            vec3 normal;
             vec3 diffuse;
             vec3 specular;
+            vec3 normal;
             float roughness;
             vec2 anisotropy;
         };
@@ -103,15 +103,30 @@ object GLProgramConstants
         {
             // Gold
             Surface result;
-            result.roughness = mod(floor(uv.x * 8.0) + floor(uv.y * 8.0), 3.0) * (0.2/2.0);
-            result.roughness = 0.0;
-            vec2 noise = 0.1 * result.roughness * (vec2(rand(uv), rand(uv * 10.0)) * 2.0 - 1.0);
-            result.normal = normalize(vec3(noise.x, noise.y, 1.0));
             result.diffuse = vec3(0, 0, 0);
             result.specular = vec3(1.0, 0.8, 0.35);
-            result.anisotropy = vec2(0.0, 0.04);
-            result.roughness = 0.0;
+            
+            // Tiled roughness levels
+            //result.roughness = mod(floor(uv.x * 8.0) + floor(uv.y * 8.0), 3.0) * (0.2/2.0);
+            //vec2 noise = 0.1 * result.roughness * (vec2(rand(uv), rand(uv * 10.0)) * 2.0 - 1.0);
+            //result.normal = normalize(vec3(noise.x, noise.y, 1.0));
+            //result.anisotropy = vec2(0.0, 0.0);
+            
+            // Circular brush
+            vec2 uv_centered = uv * 2.0 - 1.0;
+            //float in_circle = float(dot(uv_centered, uv_centered) < 0.5);
+            float in_circle = 1.0;
+            result.normal = vec3(0.0, 0.0, 1.0);
+            result.roughness = 0.02 + 0.08 * in_circle;
+            result.anisotropy = normalize(uv_centered) * 0.1 * in_circle;
             return result;
+            
+            // TODO:
+            // Maybe apply ^2 for roughness and anisotropy
+            // when sampling from textures
+            // or on CPU if numbers are given directly.
+            // Have to test, but this could give
+            // a more useful range to work with.
         }
         
         vec3 tone_map(vec3 color)
