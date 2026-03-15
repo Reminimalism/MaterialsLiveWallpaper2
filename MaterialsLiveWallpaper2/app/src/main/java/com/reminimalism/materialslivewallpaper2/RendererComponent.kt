@@ -56,7 +56,7 @@ class RendererComponent : Component()
         program?.setParams(
             transform,
             sensorsComponent?.getRotationMatrix() ?: defaultRotation,
-            0.2f
+            0.5f
         )
         meshComponent?.let {
             for (mesh in it.getMeshes())

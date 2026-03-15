@@ -30,28 +30,51 @@ object GLProgramConstants
     val fragmentShader = """
         precision highp float;
         
+        #ifndef ANISOTROPY
+            #define ANISOTROPY 1
+        #endif
+        
+        #ifndef ANISOTROPY_SAMPLES
+            #define ANISOTROPY_SAMPLES 8
+        #endif
+        
         varying vec3 frag_normal;
         varying vec3 frag_tangent;
         varying vec3 frag_view;
         varying vec2 frag_uv;
         
-        vec3 sample_env(vec3 dir)
-        {
-            vec2 plane = dir.xy / dir.z;
-            
-            vec2 planemod = mod(plane * 5.0, 2.0);
-            float light = float(dir.z >= 0.02) * max(0.0, dir.z - 0.02);
-            light *= floor(planemod.x) * floor(planemod.y);
-            
-            planemod = mod(plane * 10.0, 2.0);
-            float tiles = float(dir.z <= -0.02) * max(0.0, -dir.z - 0.02);
-            tiles *= float(planemod.x >= 0.2) * float(planemod.y >= 0.2);
-            
-            float ambient = 1.0 - dir.z * dir.z;
-            ambient = 0.05 + 0.1 * ambient * ambient;
-            float color = ambient + light * 2.0 + tiles;
-            return vec3(color, color, color);
-        }
+        // TODO: Update lookups with better distribution?
+        // TODO: Find the proper syntax to write const arrays once online...
+        //const float anisotropy_offsets[16] = {
+        //    0.10, -0.10,
+        //    0.50, -0.50, // 4
+        //    0.20, -0.20,
+        //    0.75, -0.75, // 8
+        //    0.05, -0.05,
+        //    0.35, -0.35,
+        //    0.60, -0.60,
+        //    0.90, -0.90 // 16
+        //};
+        //const float anisotropy_weights[16] = {
+        //    0.90, 0.90,
+        //    0.50, 0.50, // 4
+        //    0.80, 0.80,
+        //    0.25, 0.25, // 8
+        //    0.95, 0.95,
+        //    0.65, 0.65,
+        //    0.40, 0.40,
+        //    0.10, 0.10 // 16
+        //};
+        //const float anisotropy_weight_sums[16] = {
+        //    0.90, 1.80,
+        //    3.30, 4.80, // 4
+        //    5.60, 6.40,
+        //    6.65, 6.90, // 8
+        //    7.85, 8.80,
+        //    9.45, 10.1,
+        //    10.5, 10.9,
+        //    11.0, 11.1 // 16
+        //};
         
         float rand(float seed)
         {
@@ -65,11 +88,91 @@ object GLProgramConstants
             return rand(rand(seed.x) + seed.y);
         }
         
+        struct Surface
+        {
+            vec3 normal;
+            vec3 diffuse;
+            vec3 specular;
+            float roughness;
+            vec2 anisotropy;
+        };
+        
+        vec3 sample_env(vec3 dir, float roughness)
+        {
+            // Ground tiles & top lights that requires heavy sampling for roughness
+            //vec2 plane = dir.xy / dir.z;
+            //
+            //vec2 planemod = mod(plane * 5.0, 2.0);
+            //float light = float(dir.z >= 0.02) * max(0.0, dir.z - 0.02);
+            //light *= floor(planemod.x) * floor(planemod.y);
+            //
+            //planemod = mod(plane * 10.0, 2.0);
+            //float tiles = float(dir.z <= -0.02) * max(0.0, -dir.z - 0.02);
+            //tiles *= float(planemod.x >= 0.2) * float(planemod.y >= 0.2);
+            //
+            //float ambient = 1.0 - dir.z * dir.z;
+            //ambient = 0.05 + 0.1 * ambient * ambient;
+            //
+            //float color = ambient + light * 2.0 + tiles;
+            //return vec3(color, color, color);
+            
+            // Easy environment with fake roughness
+            float t = max(max(abs(dir.x), abs(dir.y)), abs(dir.z));
+            vec3 dir_cube = dir / t;
+            t = sqrt(dot(dir_cube, dir_cube) - 1.0);
+            t = mod(t * 4.0, 1.0);
+            t = float(t > 0.5) * (1.0 - t) + float(t <= 0.5) * t;
+            t *= 2.0;
+            t = t * t;
+            t = 1.0 - t;
+            t = t * t - 0.5;
+            roughness = (1.1/1.0) * roughness / (roughness + 0.1);
+            float brightness = 0.5 + (1.0 - roughness) * clamp(t / max(0.001, roughness), -0.4, 0.5);
+            brightness *= 1.25 + dir.z * 0.75;
+            return vec3(brightness, brightness, brightness);
+        }
+        
+        Surface get_surface(vec2 uv)
+        {
+            // Gold
+            Surface result;
+            result.roughness = mod(floor(uv.x * 8.0) + floor(uv.y * 8.0), 3.0) * (0.2/2.0);
+            result.roughness = 0.0;
+            vec2 noise = 0.1 * result.roughness * (vec2(rand(uv), rand(uv * 10.0)) * 2.0 - 1.0);
+            result.normal = normalize(vec3(noise.x, noise.y, 1.0));
+            result.diffuse = vec3(0, 0, 0);
+            result.specular = vec3(1.0, 0.8, 0.35);
+            result.anisotropy = vec2(0.0, 0.04);
+            result.roughness = 0.0;
+            return result;
+        }
+        
         vec3 tone_map(vec3 color)
         {
             float max_color = max(max(color.x, color.y), color.z);
-            float scale = 10.0 / (max_color + 10.0);
-            return color * scale + max(0.0, (0.9 - scale));
+            
+            // Method 1
+            //float scale = 1.0 / (max_color + 0.5);
+            //return color * scale + 1.5 * max(0.0, 0.67 - scale);
+            
+            // Method 2
+            //float scale = 1.0 / (max_color + 1.0);
+            //float white = max_color / (max_color + 10.0);
+            //return (color * scale + white) / (scale + white);
+            
+            // Method 3
+            float scale = 1.0 / max(1.0, max_color);
+            float white = max(0.0, max_color - 1.0);
+            white = white / (white + 2.0);
+            return color * scale * (1.0 - white) + white;
+        }
+        
+        vec3 calculate_specular(vec3 specular_color, float roughness, vec3 view, vec3 normal)
+        {
+            float view_normal_dot = dot(view, normal);
+            vec3 l = (view_normal_dot * 2.0) * normal - view;
+            float l_up = max(0.0, view_normal_dot);
+            return specular_color * sample_env(l, l_up * roughness);
         }
         
         void main()
@@ -79,33 +182,71 @@ object GLProgramConstants
             vec3 bitangent = cross(normal, tangent);
             vec3 view = normalize(frag_view);
             
-            // Gold material shader fun test
-            //float roughness = frag_uv.y * frag_uv.y * 0.2;
-            float roughness = mod(floor(frag_uv.x * 8.0) + floor(frag_uv.y * 8.0), 3.0) * (0.2/2.0);
-            vec2 radius = vec2(
-                roughness,
-                roughness
+            Surface surface = get_surface(frag_uv);
+            normal = surface.normal.z * normal
+                   + surface.normal.x * tangent
+                   + surface.normal.y * bitangent;
+            
+            // Fresnel
+            // Probably no need for fresnel really as it's not meaningful in wallpaper usage
+            // 6.0 exponent for non-metal, 50+ for metal (0.5+ specular component)
+            float fresnel = pow(
+                1.0 - max(0.0, dot(view, normal)),
+                6.0 + dot(surface.specular, vec3(1.0, 1.0, 1.0)) * 35.0
             );
-            vec2 noise = 0.1 * radius * (vec2(rand(frag_uv), rand(frag_uv * 10.0)) * 2.0 - 1.0);
-            normal = normalize(normal + tangent * noise.x + bitangent * noise.y);
-            vec3 l = (dot(view, normal) * 2.0) * normal - view;
-            vec3 env = sample_env(l);
-            float sum = 1.0;
-            for (int x = -4; x <= 4; x++)
+            surface.specular += (vec3(1.0, 1.0, 1.0) - surface.specular) * fresnel;
+            surface.diffuse *= (1.0 - fresnel);
+            
+            #if ANISOTROPY
+            
+            vec3 anisotropy = surface.anisotropy.x * tangent + surface.anisotropy.y * bitangent;
+            
+            //vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal);
+            //for (int i = 0; i < ANISOTROPY_SAMPLES; i++)
+            //{
+            //    vec3 normal_ani = normalize(
+            //        normal + anisotropy_offsets[i] * anisotropy
+            //    );
+            //    color += calculate_specular(
+            //        surface.specular, surface.roughness, view, normal_ani
+            //    ) * anisotropy_weights[i];
+            //}
+            //color /= 1.0 + anisotropy_weight_sums[ANISOTROPY_SAMPLES - 1];
+            // Don't know how to write const arrays so above is commented out for now
+            // Or leave the below as the noise is very nice to have?
+            
+            float offset_noise = rand(frag_uv);
+            float offset = (offset_noise - 0.5) / float(ANISOTROPY_SAMPLES + 1);
+            //offset = (offset * offset + offset) * 0.5;
+            vec3 normal_ani = normalize(normal + offset * anisotropy);
+            
+            vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal_ani);
+            
+            for (int i = 1; i <= ANISOTROPY_SAMPLES; i++)
             {
-                for (int y = -4; y <= 4; y++)
-                {
-                    vec2 offset = vec2(float(x) * (1.0/8.0), float(y) * (1.0/8.0));
-                    float intensity = 1.0 - min(1.0, dot(offset, offset));
-                    offset *= radius;
-                    sum += intensity;
-                    env += sample_env(l + tangent * offset.x + bitangent * offset.y) * intensity;
-                }
+                offset_noise = rand(frag_uv + vec2(float(i), 0));
+                offset = (float(i) - 0.5 + offset_noise) / float(ANISOTROPY_SAMPLES + 1);
+                //offset = (offset * offset + offset) * 0.5;
+                normal_ani = normalize(normal + offset * anisotropy);
+                color += calculate_specular(
+                    surface.specular, surface.roughness, view, normal_ani
+                );
+                normal_ani = normalize(normal - offset * anisotropy);
+                color += calculate_specular(
+                    surface.specular, surface.roughness, view, normal_ani
+                );
             }
-            env /= sum;
-            vec3 col = vec3(1.0, 0.8, 0.35) * env;
-            col = tone_map(col);
-            gl_FragColor = vec4(sqrt(col), 1.0);
+            color /= 1.0 + float(ANISOTROPY_SAMPLES * 2);
+            
+            #else
+            
+            vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal);
+            
+            #endif
+            
+            color += surface.diffuse * sample_env(normal, 1.0);
+            color = tone_map(color);
+            gl_FragColor = vec4(sqrt(color), 1.0);
             
             // UV test
             //gl_FragColor = vec4(frag_uv.x, frag_uv.y, 1.0, 1.0);
