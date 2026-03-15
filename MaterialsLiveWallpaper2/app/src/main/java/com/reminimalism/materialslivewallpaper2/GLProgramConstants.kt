@@ -41,6 +41,14 @@ object GLProgramConstants
             #define CLEAR_COAT 0
         #endif
         
+        #ifndef FRESNEL_EFFECT
+            #define FRESNEL_EFFECT 0
+        #endif
+        
+        #ifndef TONE_MAP
+            #define TONE_MAP 1
+        #endif
+        
         varying vec3 frag_normal;
         varying vec3 frag_tangent;
         varying vec3 frag_view;
@@ -186,8 +194,10 @@ object GLProgramConstants
                         + surface.normal.x * tangent
                         + surface.normal.y * bitangent;
             
+            #if FRESNEL_EFFECT
+            
             // Fresnel
-            // Probably no need for fresnel really as it's not meaningful in wallpaper usage
+            // Probably no need for fresnel usually
             // 6.0 exponent for non-metal, 50+ for metal (0.5+ specular component)
             float fresnel = pow(
                 1.0 - max(0.0, dot(view, normal)),
@@ -198,6 +208,8 @@ object GLProgramConstants
             #if CLEAR_COAT
             surface.coat_specular += (1.0 - surface.coat_specular) * fresnel;
             #endif
+            
+            #endif // FRESNEL_EFFECT
             
             #if ANISOTROPY
             
@@ -230,7 +242,7 @@ object GLProgramConstants
             
             vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal);
             
-            #endif
+            #endif // ANISOTROPY
             
             #if CLEAR_COAT
             
@@ -243,11 +255,16 @@ object GLProgramConstants
                 surface.coat_roughness, view, mesh_normal
             );
             
-            #endif
+            #endif // CLEAR_COAT
             
             color += surface.diffuse * sample_env(normal, 1.0);
+            
+            #if TONE_MAP
             color = tone_map(color);
-            gl_FragColor = vec4(sqrt(color), 1.0);
+            color = sqrt(color);
+            #endif
+            
+            gl_FragColor = vec4(color, 1.0);
             
             // UV test
             //gl_FragColor = vec4(frag_uv.x, frag_uv.y, 1.0, 1.0);
