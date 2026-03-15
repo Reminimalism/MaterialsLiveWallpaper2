@@ -43,39 +43,6 @@ object GLProgramConstants
         varying vec3 frag_view;
         varying vec2 frag_uv;
         
-        // TODO: Update lookups with better distribution?
-        // TODO: Find the proper syntax to write const arrays once online...
-        //const float anisotropy_offsets[16] = {
-        //    0.10, -0.10,
-        //    0.50, -0.50, // 4
-        //    0.20, -0.20,
-        //    0.75, -0.75, // 8
-        //    0.05, -0.05,
-        //    0.35, -0.35,
-        //    0.60, -0.60,
-        //    0.90, -0.90 // 16
-        //};
-        //const float anisotropy_weights[16] = {
-        //    0.90, 0.90,
-        //    0.50, 0.50, // 4
-        //    0.80, 0.80,
-        //    0.25, 0.25, // 8
-        //    0.95, 0.95,
-        //    0.65, 0.65,
-        //    0.40, 0.40,
-        //    0.10, 0.10 // 16
-        //};
-        //const float anisotropy_weight_sums[16] = {
-        //    0.90, 1.80,
-        //    3.30, 4.80, // 4
-        //    5.60, 6.40,
-        //    6.65, 6.90, // 8
-        //    7.85, 8.80,
-        //    9.45, 10.1,
-        //    10.5, 10.9,
-        //    11.0, 11.1 // 16
-        //};
-        
         float rand(float seed)
         {
             seed = mod(seed * seed * 3456.78 + 912.0, 1.0);
@@ -200,20 +167,6 @@ object GLProgramConstants
             #if ANISOTROPY
             
             vec3 anisotropy = surface.anisotropy.x * tangent + surface.anisotropy.y * bitangent;
-            
-            //vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal);
-            //for (int i = 0; i < ANISOTROPY_SAMPLES; i++)
-            //{
-            //    vec3 normal_ani = normalize(
-            //        normal + anisotropy_offsets[i] * anisotropy
-            //    );
-            //    color += calculate_specular(
-            //        surface.specular, surface.roughness, view, normal_ani
-            //    ) * anisotropy_weights[i];
-            //}
-            //color /= 1.0 + anisotropy_weight_sums[ANISOTROPY_SAMPLES - 1];
-            // Don't know how to write const arrays so above is commented out for now
-            // Or leave the below as the noise is very nice to have?
             
             float offset_noise = rand(frag_uv);
             float offset = (offset_noise - 0.5) / float(ANISOTROPY_SAMPLES + 1);
