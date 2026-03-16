@@ -49,6 +49,10 @@ object GLProgramConstants
             #define TONE_MAP 1
         #endif
         
+        #ifndef EXPOSURE
+            #define EXPOSURE 1.0
+        #endif
+        
         varying vec3 frag_normal;
         varying vec3 frag_tangent;
         varying vec3 frag_view;
@@ -248,6 +252,8 @@ object GLProgramConstants
             #endif // CLEAR_COAT
             
             color += surface.diffuse * sample_env(normal, 1.0);
+            
+            color *= float(EXPOSURE);
             
             #if TONE_MAP
             color = tone_map(color);

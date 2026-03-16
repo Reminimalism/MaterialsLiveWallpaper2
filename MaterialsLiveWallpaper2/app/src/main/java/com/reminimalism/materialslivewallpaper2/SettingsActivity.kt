@@ -8,9 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -48,7 +46,12 @@ fun getAppPreferences(context: Context): SharedPreferences
     return context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 }
 
-val ROTATION_SMOOTHING = "smoothRotation"
+const val ROTATION_SMOOTHING = "smoothRotation"
+const val ROTATION_SMOOTHING_DEFAULT = true
+const val EXPOSURE = "exposure"
+const val EXPOSURE_DEFAULT = 1f
+const val ANISOTROPY_SAMPLES = "anisotropy_samples"
+const val ANISOTROPY_SAMPLES_DEFAULT = 4
 
 @Composable
 fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null)
@@ -85,7 +88,26 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
                     preferences, ROTATION_SMOOTHING, "Rotation Smoothing",
                     "Smoothes out the rotation sensor data.",
                     "Uses raw sensor rotation data. Not recommended.",
-                    true
+                    ROTATION_SMOOTHING_DEFAULT
+                )
+
+                SettingsSliderView(
+                    preferences, EXPOSURE,
+                    "Exposure", "The brightness",
+                    EXPOSURE_DEFAULT,
+                    0f, 2f,
+                    100
+                )
+
+                SettingsIntSliderView(
+                    preferences, ANISOTROPY_SAMPLES,
+                    "Anisotropy Samples",
+                    "The number of samples to render brushed materials."
+                    + " More samples results in smoother look"
+                    + " but consumes more battery"
+                    + " and may reduce frame rates.",
+                    ANISOTROPY_SAMPLES_DEFAULT,
+                    1, 32
                 )
 
                 val options1 = buildMap {

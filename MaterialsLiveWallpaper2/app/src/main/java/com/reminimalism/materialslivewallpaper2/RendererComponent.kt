@@ -1,11 +1,14 @@
 package com.reminimalism.materialslivewallpaper2
 
 import android.opengl.GLES20
+import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getFloat
+import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getInt
 
 class RendererComponent : Component()
 {
     private var program: GLProgram? = null
 
+    private var preferencesComponent: PreferencesComponent? = null
     private var meshComponent: MeshComponent? = null
     private var sensorsComponent: SensorsComponent? = null
 
@@ -37,15 +40,34 @@ class RendererComponent : Component()
 
     override fun initialize()
     {
+        preferencesComponent = getComponent()
         meshComponent = getComponent()
         sensorsComponent = getComponent()
     }
 
     override fun start()
     {
+        recreateProgram()
+
+        preferencesComponent?.registerListener(
+            this, arrayListOf(EXPOSURE, ANISOTROPY_SAMPLES)
+        ) {
+            recreateProgram()
+        }
+    }
+
+    private fun recreateProgram()
+    {
+        program?.destroy()
         program = GLProgram(
             GLProgramConstants.vertexShader,
-            GLProgramConstants.fragmentShader
+            "#define EXPOSURE "
+                    + preferencesComponent.getFloat(EXPOSURE, EXPOSURE_DEFAULT)
+                    + "\n"
+                    + "#define ANISOTROPY_SAMPLES "
+                    + preferencesComponent.getInt(ANISOTROPY_SAMPLES, ANISOTROPY_SAMPLES_DEFAULT)
+                    + "\n"
+            + GLProgramConstants.fragmentShader
         )
     }
 
@@ -82,6 +104,7 @@ class RendererComponent : Component()
 
     override fun stop()
     {
+        preferencesComponent?.unregisterListeners(this)
         program?.destroy()
     }
 }

@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getBool
 import kotlin.math.max
 
 class SensorsComponent(context: Context) : Component()
@@ -63,12 +64,16 @@ class SensorsComponent(context: Context) : Component()
     {
         preferencesComponent = getComponent()
 
-        rotationSmoothingEnabled = getRotationSmoothingPreference()
+        rotationSmoothingEnabled = preferencesComponent.getBool(
+            ROTATION_SMOOTHING, ROTATION_SMOOTHING_DEFAULT
+        )
 
         preferencesComponent?.registerListener(this, ROTATION_SMOOTHING) {
             preferencesComponent?.let()
             {
-                rotationSmoothingEnabled = getRotationSmoothingPreference()
+                rotationSmoothingEnabled = preferencesComponent.getBool(
+                    ROTATION_SMOOTHING, ROTATION_SMOOTHING_DEFAULT
+                )
             }
             resetTime()
             if (rotationSmoothingEnabled)
@@ -170,16 +175,5 @@ class SensorsComponent(context: Context) : Component()
     private fun unregister()
     {
         sensorManager.unregisterListener(rotationSensorListener)
-    }
-
-    private fun getRotationSmoothingPreference(): Boolean
-    {
-        preferencesComponent?.let()
-        {
-            return it.getPreferences().getBoolean(
-                ROTATION_SMOOTHING, true
-            )
-        }
-        return true
     }
 }
