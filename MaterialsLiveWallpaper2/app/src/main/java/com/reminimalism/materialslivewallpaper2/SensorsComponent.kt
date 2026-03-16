@@ -131,6 +131,7 @@ class SensorsComponent(context: Context) : Component()
 
         if (rotationChanged)
         {
+            rotationChanged = false
             swapMatrices() // matrix A is now set to the previous matrix B
             SensorManager.getRotationMatrixFromVector(rotationMatrixB, rotationVector)
             if (lastUpdateTime == 0L)
