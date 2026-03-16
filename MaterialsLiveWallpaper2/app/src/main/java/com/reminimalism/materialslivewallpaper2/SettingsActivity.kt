@@ -100,14 +100,16 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
 
                 SettingsOptionView(
                     preferences, MATERIAL,
-                    "Material", MATERIAL_DEFAULT,
+                    "Material (Preview)", MATERIAL_DEFAULT,
                     MATERIAL_OPTIONS
                 )
 
                 SettingsItemView(
                     "More Options...",
                     "Will be added in the future."
-                        + " This is a preview."
+                            + " This is a preview."
+                            + " The above material options"
+                            + " may be removed in the future."
                 )
 
                 SettingsHeaderView("General")
