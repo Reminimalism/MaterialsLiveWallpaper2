@@ -215,23 +215,13 @@ object GLProgramConstants
             
             vec3 anisotropy = surface.anisotropy.x * tangent + surface.anisotropy.y * bitangent;
             
-            float offset_noise = rand(frag_uv);
-            float offset = (offset_noise - 0.5) / float(ANISOTROPY_SAMPLES + 1);
-            //offset = (offset * offset + offset) * 0.5;
-            vec3 normal_ani = normalize(normal + offset * anisotropy);
+            vec3 color = vec3(0.0, 0.0, 0.0);
             
-            vec3 color = calculate_specular(surface.specular, surface.roughness, view, normal_ani);
-            
-            for (int i = 1; i <= ANISOTROPY_SAMPLES; i++)
+            for (int i = -ANISOTROPY_SAMPLES; i <= ANISOTROPY_SAMPLES; i++)
             {
-                offset_noise = rand(frag_uv + vec2(float(i), 0));
-                offset = (float(i) - 0.5 + offset_noise) / float(ANISOTROPY_SAMPLES + 1);
-                //offset = (offset * offset + offset) * 0.5;
-                normal_ani = normalize(normal + offset * anisotropy);
-                color += calculate_specular(
-                    surface.specular, surface.roughness, view, normal_ani
-                );
-                normal_ani = normalize(normal - offset * anisotropy);
+                float offset_noise = rand(frag_uv + vec2(float(i), 0));
+                float offset = ((float(i) - 0.5) + offset_noise) / (float(ANISOTROPY_SAMPLES) + 0.5);
+                vec3 normal_ani = normalize(normal + offset * anisotropy);
                 color += calculate_specular(
                     surface.specular, surface.roughness, view, normal_ani
                 );
