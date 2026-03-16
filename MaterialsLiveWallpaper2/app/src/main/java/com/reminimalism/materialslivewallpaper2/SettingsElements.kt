@@ -17,9 +17,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.edit
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsHeaderView(text: String)
@@ -185,42 +189,133 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
 }
 
 @Composable
+fun SettingsSliderView(preferences: SharedPreferences?, key: String, title: String,
+                       subtitle: String = "", defaultValue: Float = 0f,
+                       rangeMin: Float = 0f, rangeMax: Float = 1f,
+                       steps: Int = 100)
+{
+    val setting = remember {
+        mutableFloatStateOf(preferences?.getFloat(key, defaultValue) ?: defaultValue)
+    }
+    val sliderValue = remember {
+        mutableFloatStateOf((setting.floatValue - rangeMin) / (rangeMax - rangeMin))
+    }
+
+    SettingsItemView(
+        title,
+        subtitle,
+        content = {
+            Text(setting.floatValue.toString(), fontSize = 24.sp)
+        },
+        bottomContent = {
+            Row(
+                modifier = Modifier
+                    .padding(24.dp, 0.dp)
+            )
+            {
+                Slider(
+                    value = sliderValue.floatValue,
+                    //valueRange = rangeMin..rangeMax,
+                    steps = steps,
+                    onValueChange = {
+                        sliderValue.floatValue = it
+                        setting.floatValue = rangeMin + ((it * steps).roundToInt() / steps.toFloat()) * (rangeMax - rangeMin)
+                    },
+                    onValueChangeFinished = {
+                        preferences?.edit { putFloat(key, setting.floatValue) }
+                    },
+                    modifier = Modifier.padding(8.dp, 0.dp)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun SettingsIntSliderView(preferences: SharedPreferences?, key: String, title: String,
+                       subtitle: String = "", defaultValue: Int = 0,
+                       rangeMin: Int = 0, rangeMax: Int = 100)
+{
+    val setting = remember {
+        mutableIntStateOf(preferences?.getInt(key, defaultValue) ?: defaultValue)
+    }
+
+    SettingsItemView(
+        title,
+        subtitle,
+        content = {
+            Text(setting.intValue.toString(), fontSize = 24.sp)
+        },
+        bottomContent = {
+            Row(
+                modifier = Modifier
+                    .padding(24.dp, 0.dp)
+            )
+            {
+                Slider(
+                    value = setting.intValue.toFloat(),
+                    valueRange = rangeMin.toFloat()..rangeMax.toFloat(),
+                    steps = rangeMax - rangeMin + 1,
+                    onValueChange = {
+                        setting.intValue = it.roundToInt()
+                    },
+                    onValueChangeFinished = {
+                        preferences?.edit { putInt(key, setting.intValue) }
+                    },
+                    modifier = Modifier.padding(8.dp, 0.dp)
+                )
+            }
+        }
+    )
+}
+
+@Composable
 fun SettingsItemView(title: String, subtitle: String = "",
                      content: @Composable () -> Unit = {},
+                     bottomContent: @Composable () -> Unit = {},
                      onClick: () -> Unit = {})
 {
-    Row(
+    Column(
         Modifier
             .fillMaxSize()
             .padding(0.dp)
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
     )
     {
-        Column(
+        Row(
             Modifier
-                .padding(16.dp)
-                .weight(1f)
+                .fillMaxSize()
+                .padding(0.dp)
+                .clickable(onClick = onClick),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         )
         {
-            Text(
-                title,
-                color = MaterialTheme.colorScheme.secondary,
-                fontSize = 24.sp
+            Column(
+                Modifier
+                    .padding(16.dp)
+                    .weight(1f)
             )
-            if (subtitle.isNotEmpty())
+            {
                 Text(
-                    subtitle
+                    title,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontSize = 24.sp
                 )
+                if (subtitle.isNotEmpty())
+                    Text(
+                        subtitle
+                    )
+            }
+
+            Box(
+                Modifier.padding(16.dp)
+            )
+            {
+                content()
+            }
         }
 
-        Box(
-            Modifier.padding(16.dp)
-        )
-        {
-            content()
-        }
+        bottomContent()
     }
 }
 
