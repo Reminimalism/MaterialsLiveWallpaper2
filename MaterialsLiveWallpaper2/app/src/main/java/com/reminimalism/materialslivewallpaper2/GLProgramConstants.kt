@@ -242,7 +242,7 @@ object GLProgramConstants
             
             color = (1.0 - surface.coat_specular) * color + calculate_specular(
                 vec3(surface.coat_specular, surface.coat_specular, surface.coat_specular),
-                surface.coat_roughness, view, mesh_normal
+                surface.coat_roughness, view, coat_normal
             );
             
             #endif // CLEAR_COAT
