@@ -23,7 +23,7 @@ class PreferencesComponent(context: Context) : Component()
     private fun addToCurrentCallbacks(key: String)
     {
         keyToComponentListeners[key]?.forEach { componentListener ->
-            currentCallbacks.add { componentListener.value }
+            currentCallbacks.add(componentListener.value)
         }
     }
 
