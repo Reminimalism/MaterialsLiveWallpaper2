@@ -139,7 +139,7 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
         )
         {
             Box(
-                modifier = Modifier.padding(16.dp, 32.dp)
+                modifier = Modifier.padding(32.dp, 48.dp)
             )
             {
                 Column(
@@ -152,6 +152,7 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
                 {
                     Text(
                         text = title,
+                        color = MaterialTheme.colorScheme.secondary,
                         fontSize = 24.sp,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -170,11 +171,12 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
                                         expanded.value = false
                                         preferences?.edit { putString(key, option.key) }
                                     }
+                                    .padding(8.dp)
                             )
                             {
                                 Text(
                                     text = option.value,
-                                    fontSize = 24.sp,
+                                    fontSize = 16.sp,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(8.dp)
