@@ -20,6 +20,54 @@ class PreferencesComponent(context: Context) : Component()
         }
     }
 
+    companion object
+    {
+        fun PreferencesComponent?.getBool(key: String, defaultValue: Boolean): Boolean
+        {
+            this?.let()
+            {
+                return it.getPreferences().getBoolean(
+                    key, defaultValue
+                )
+            }
+            return defaultValue
+        }
+
+        fun PreferencesComponent?.getInt(key: String, defaultValue: Int): Int
+        {
+            this?.let()
+            {
+                return it.getPreferences().getInt(
+                    key, defaultValue
+                )
+            }
+            return defaultValue
+        }
+
+        fun PreferencesComponent?.getFloat(key: String, defaultValue: Float): Float
+        {
+            this?.let()
+            {
+                return it.getPreferences().getFloat(
+                    key, defaultValue
+                )
+            }
+            return defaultValue
+        }
+
+        fun PreferencesComponent?.getString(key: String, defaultValue: String): String
+        {
+            this?.let()
+            {
+                val result = it.getPreferences().getString(
+                    key, defaultValue
+                )
+                return result ?: ""
+            }
+            return defaultValue
+        }
+    }
+
     private fun addToCurrentCallbacks(key: String)
     {
         keyToComponentListeners[key]?.forEach { componentListener ->
