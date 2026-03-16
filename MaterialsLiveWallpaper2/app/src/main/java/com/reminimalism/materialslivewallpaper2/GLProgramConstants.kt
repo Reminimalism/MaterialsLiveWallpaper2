@@ -114,8 +114,8 @@ object GLProgramConstants
             t = t * t;
             t = 1.0 - t;
             t = t * t - 0.5;
-            roughness = (1.1/1.0) * roughness / (roughness + 0.1);
-            float brightness = 0.5 + (1.0 - roughness) * clamp(t / max(0.001, roughness), -0.4, 0.5);
+            float roughness2 = (1.1/1.0) * roughness / (roughness + 0.1);
+            float brightness = 0.5 + (1.0 - roughness) * clamp(t / max(0.001, roughness2), -0.45, 0.5);
             brightness *= 1.25 + dir.z * 0.75;
             return vec3(brightness, brightness, brightness);
         }
@@ -127,19 +127,28 @@ object GLProgramConstants
             result.diffuse = vec3(0, 0, 0);
             result.specular = vec3(1.0, 0.8, 0.35);
             
+            #if ANISOTROPY == 0
             // Tiled roughness levels
             //result.roughness = mod(floor(uv.x * 8.0) + floor(uv.y * 8.0), 3.0) * (0.2/2.0);
             //vec2 noise = 0.1 * result.roughness * (vec2(rand(uv), rand(uv * 10.0)) * 2.0 - 1.0);
-            //result.normal = normalize(vec3(noise.x, noise.y, 1.0));
-            //result.anisotropy = vec2(0.0, 0.0);
+            // The above 2 lines are replaced with modified numbers to mimic the parameters
+            // better with the fake roughness of the environment for now
+            result.roughness = mod(floor(uv.x * 8.0) + floor(uv.y * 8.0), 3.0) * (0.6/2.0);
+            vec2 noise = 0.033 * result.roughness * (vec2(rand(uv), rand(uv * 10.0)) * 2.0 - 1.0);
+            result.normal = normalize(vec3(noise.x, noise.y, 1.0));
+            result.anisotropy = vec2(0.0, 0.0);
+            #endif
             
+            #if ANISOTROPY == 1
             // Circular brush
             vec2 uv_centered = uv * 2.0 - 1.0;
             //float in_circle = float(dot(uv_centered, uv_centered) < 0.5);
-            float in_circle = 1.0;
+            //float in_circle = 1.0;
+            float in_circle = 1.0 - max(0.0, length(uv_centered));
             result.normal = vec3(0.0, 0.0, 1.0);
             result.roughness = 0.02 + 0.08 * in_circle;
             result.anisotropy = normalize(uv_centered) * 0.1 * in_circle;
+            #endif
             
             #if CLEAR_COAT
             result.coat_normal = vec3(0.0, 0.0, 1.0);

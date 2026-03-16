@@ -41,7 +41,7 @@ fun SettingsHeaderView(text: String)
     Row(
         Modifier
             .fillMaxSize()
-            .padding(16.dp, 0.dp),
+            .padding(16.dp, 16.dp, 16.dp, 0.dp),
         verticalAlignment = Alignment.CenterVertically
     )
     {
@@ -303,7 +303,8 @@ fun SettingsItemView(title: String, subtitle: String = "",
                 )
                 if (subtitle.isNotEmpty())
                     Text(
-                        subtitle
+                        subtitle,
+                        fontSize = 14.sp
                     )
             }
 

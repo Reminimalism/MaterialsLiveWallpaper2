@@ -3,6 +3,7 @@ package com.reminimalism.materialslivewallpaper2
 import android.opengl.GLES20
 import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getFloat
 import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getInt
+import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getString
 
 class RendererComponent : Component()
 {
@@ -50,7 +51,7 @@ class RendererComponent : Component()
         recreateProgram()
 
         preferencesComponent?.registerListener(
-            this, arrayListOf(EXPOSURE, ANISOTROPY_SAMPLES)
+            this, arrayListOf(EXPOSURE, ANISOTROPY_SAMPLES, MATERIAL)
         ) {
             recreateProgram()
         }
@@ -66,6 +67,12 @@ class RendererComponent : Component()
                     + "\n"
                     + "#define ANISOTROPY_SAMPLES "
                     + preferencesComponent.getInt(ANISOTROPY_SAMPLES, ANISOTROPY_SAMPLES_DEFAULT)
+                    + "\n"
+                    + "#define ANISOTROPY "
+                    + (
+                        if (preferencesComponent.getString(MATERIAL, MATERIAL_DEFAULT) == MATERIAL_OPTION_BRUSHED_GOLD)
+                            1 else 0
+                    )
                     + "\n"
             + GLProgramConstants.fragmentShader
         )
