@@ -46,15 +46,29 @@ fun getAppPreferences(context: Context): SharedPreferences
     return context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 }
 
-const val MATERIAL = "materialTemplate"
-const val MATERIAL_DEFAULT = "default"
+const val MATERIAL = "material_mode"
 const val MATERIAL_OPTION_DEFAULT = "default"
 const val MATERIAL_OPTION_BRUSHED_GOLD = "brushed_gold"
 val MATERIAL_OPTIONS = mapOf(
     Pair(MATERIAL_OPTION_DEFAULT, "Gold Tiles"),
     Pair(MATERIAL_OPTION_BRUSHED_GOLD, "Faded Brushed Gold")
 )
-const val ROTATION_SMOOTHING = "smoothRotation"
+const val MATERIAL_DEFAULT = MATERIAL_OPTION_DEFAULT
+
+const val ROTATION_RATE = "rotation_rate"
+const val ROTATION_RATE_OPTION_NORMAL = "normal"
+const val ROTATION_RATE_OPTION_UI = "ui"
+const val ROTATION_RATE_OPTION_GAME = "game"
+const val ROTATION_RATE_OPTION_FASTEST = "fastest"
+val ROTATION_RATE_OPTIONS = mapOf(
+    Pair(ROTATION_RATE_OPTION_NORMAL, "Slow"),
+    Pair(ROTATION_RATE_OPTION_UI, "Medium (UI)"),
+    Pair(ROTATION_RATE_OPTION_GAME, "Fast (Game)"),
+    Pair(ROTATION_RATE_OPTION_FASTEST, "Fastest")
+)
+const val ROTATION_RATE_DEFAULT = ROTATION_RATE_OPTION_GAME
+
+const val ROTATION_SMOOTHING = "rotation_interpolation"
 const val ROTATION_SMOOTHING_DEFAULT = true
 const val EXPOSURE = "exposure"
 const val EXPOSURE_DEFAULT = 1f
@@ -112,18 +126,13 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
                             + " may be removed in the future."
                 )
 
-                SettingsHeaderView("General")
+                SettingsHeaderView("Environment")
 
-                SettingsToggleView(
-                    preferences, ROTATION_SMOOTHING, "Rotation Smoothing",
-                    "Smoothes out the rotation sensor data."
-                            + " May add minimal latency but does not look choppy."
-                            + " This is recommended to be on for most cases.",
-                    "Uses raw sensor rotation data."
-                            + " Reduces latency a little bit but may look choppy."
-                            + " This is recommended to be on for most cases.",
-                    ROTATION_SMOOTHING_DEFAULT
+                SettingsItemView(
+                    "To be implemented..."
                 )
+
+                SettingsHeaderView("Display")
 
                 SettingsSliderView(
                     preferences, EXPOSURE,
@@ -148,6 +157,28 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
                     1, 32
                 )
 
+                SettingsOptionView(
+                    preferences, ROTATION_RATE,
+                    "Rotation Sensor Update Rate",
+                    ROTATION_RATE_DEFAULT,
+                    ROTATION_RATE_OPTIONS
+                )
+
+                SettingsToggleView(
+                    preferences, ROTATION_SMOOTHING, "Rotation Smoothing",
+                    "Smoothes out the rotation sensor data."
+                            + " May add minimal latency but does not look choppy."
+                            + "\nRecommendations:"
+                            + " Try Medium (UI) with smoothing on,"
+                            + " and Fast (Game) with smoothing off and on.",
+                    "Uses raw sensor rotation data."
+                            + " Reduces latency a little bit but may look choppy."
+                            + "\nRecommendations:"
+                            + " Try Medium (UI) with smoothing on,"
+                            + " and Fast (Game) with smoothing off and on.",
+                    ROTATION_SMOOTHING_DEFAULT
+                )
+
                 SettingsHeaderView("More")
 
                 SettingsItemView(
@@ -156,15 +187,6 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
                 )
 
                 // TODO: Privacy Policy
-
-                SettingsHeaderView("FUTURE")
-
-                SettingsItemView(
-                    "Other options coming soon...",
-                    "This is an alpha preview version."
-                            + " Customization options will be added"
-                            + " in the future updates."
-                )
 
                 //val options1 = buildMap {
                 //    for (i in 1..20)

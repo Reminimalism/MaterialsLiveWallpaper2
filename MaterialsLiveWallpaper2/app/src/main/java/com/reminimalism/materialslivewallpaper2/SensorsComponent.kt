@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getBool
+import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getString
 import kotlin.math.max
 
 class SensorsComponent(context: Context) : Component()
@@ -57,6 +58,7 @@ class SensorsComponent(context: Context) : Component()
 
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     }
+    private var isListenerRegistered = false
 
     fun getRotationMatrix() = rotationMatrix
 
@@ -67,6 +69,19 @@ class SensorsComponent(context: Context) : Component()
         rotationSmoothingEnabled = preferencesComponent.getBool(
             ROTATION_SMOOTHING, ROTATION_SMOOTHING_DEFAULT
         )
+    }
+
+    override fun start()
+    {
+        register()
+
+        rotationSmoothingEnabled = preferencesComponent.getBool(
+            ROTATION_SMOOTHING, ROTATION_SMOOTHING_DEFAULT
+        )
+
+        preferencesComponent?.registerListener(this, ROTATION_RATE) {
+            reRegister()
+        }
 
         preferencesComponent?.registerListener(this, ROTATION_SMOOTHING) {
             preferencesComponent?.let()
@@ -82,11 +97,6 @@ class SensorsComponent(context: Context) : Component()
                 rotationMatrix.copyInto(rotationMatrixB)
             }
         }
-    }
-
-    override fun start()
-    {
-        register()
     }
 
     override fun pause()
@@ -165,16 +175,41 @@ class SensorsComponent(context: Context) : Component()
         }
     }
 
+    private fun reRegister()
+    {
+        if (isListenerRegistered)
+        {
+            unregister()
+            register()
+        }
+    }
+
     private fun register()
     {
         val rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         sensorManager.registerListener(
-            rotationSensorListener, rotationSensor, SensorManager.SENSOR_DELAY_GAME
+            rotationSensorListener, rotationSensor, getSensorDelay()
         )
+        isListenerRegistered = true
     }
 
     private fun unregister()
     {
         sensorManager.unregisterListener(rotationSensorListener)
+        isListenerRegistered = false
+    }
+
+    private fun getSensorDelay(): Int
+    {
+        val delayOption = preferencesComponent.getString(ROTATION_RATE, ROTATION_RATE_DEFAULT)
+        if (delayOption == ROTATION_RATE_OPTION_GAME)
+            return SensorManager.SENSOR_DELAY_GAME
+        if (delayOption == ROTATION_RATE_OPTION_UI)
+            return SensorManager.SENSOR_DELAY_UI
+        if (delayOption == ROTATION_RATE_OPTION_NORMAL)
+            return SensorManager.SENSOR_DELAY_NORMAL
+        if (delayOption == ROTATION_RATE_OPTION_FASTEST)
+            return SensorManager.SENSOR_DELAY_FASTEST
+        return SensorManager.SENSOR_DELAY_GAME
     }
 }
