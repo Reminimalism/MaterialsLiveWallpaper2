@@ -124,6 +124,27 @@ object GLProgramConstants
             return vec3(brightness, brightness, brightness);
         }
         
+        float generate_M(vec2 uv)
+        {
+            // App icon generation demo
+            vec2 uv_centered = uv * 2.0 - 1.0;
+            float text = clamp(1.0 - 10.0 * abs(uv.x - 0.35), 0.0, 1.0)
+                       + clamp(1.0 - 10.0 * abs(uv.x - 0.65), 0.0, 1.0);
+            float v = clamp(1.0 - 5.0 * abs(abs(uv_centered.x) - uv.y + 0.4), 0.0, 1.0);
+            v *= float(uv.x <= 0.65) * float(uv.x >= 0.35);
+            text = max(text, v);
+            text = min(text, clamp(2.5 - 10.0 * abs(uv.y - 0.5), 0.0, 1.0));
+            return text;
+        }
+        
+        float generate_o(vec2 uv)
+        {
+            // App icon generation demo
+            vec2 uv_centered = uv * 2.0 - 1.0;
+            float text = clamp(3.0 - 5.0 * abs(length(uv_centered)), 0.0, 1.0);
+            return text;
+        }
+        
         Surface get_surface(vec2 uv)
         {
             // Gold
@@ -153,6 +174,41 @@ object GLProgramConstants
             result.roughness = 0.02 + 0.08 * in_circle;
             result.anisotropy = normalize(uv_centered) * 0.1 * in_circle;
             #endif
+            
+            // App icon generation demo
+            //uv = uv * 2.0 - 0.5;
+            //vec2 uv_centered = uv * 2.0 - 1.0;
+            //// There seems to be no ddx/ddy/fwidth available so...
+            //const float d = 0.002;
+            ////vec4 d_values = vec4(
+            ////    generate_M(uv + vec2(-d, -d)), // |. |
+            ////    generate_M(uv + vec2(d, -d)),  // | .|
+            ////    generate_M(uv + vec2(-d, d)),  // |' |
+            ////    generate_M(uv + vec2(d, d))    // | '|
+            ////);
+            //vec4 d_values = vec4(
+            //    generate_o(uv + vec2(-d, -d)), // |. |
+            //    generate_o(uv + vec2(d, -d)),  // | .|
+            //    generate_o(uv + vec2(-d, d)),  // |' |
+            //    generate_o(uv + vec2(d, d))    // | '|
+            //);
+            //float text_dx = (d_values.y - d_values.x + d_values.w - d_values.z) / (d * 2.0);
+            //float text_dy = (d_values.z - d_values.x + d_values.w - d_values.y) / (d * 2.0);
+            //float text = dot(d_values, vec4(0.25, 0.25, 0.25, 0.25));
+            //float in_m = float(text >= 0.5);
+            //float not_in_m = 1.0 - in_m;
+            //result.diffuse = vec3(not_in_m, not_in_m, not_in_m);
+            //result.specular *= in_m;
+            //float curve = text * 2.0 - 1.0;
+            //curve = 1.0 - curve * curve;
+            //curve *= curve;
+            ////result.normal = in_m * vec3(0.0, 0.0, 1.0)
+            ////              + not_in_m * vec3(-text_dx * curve * 0.05, -text_dy * curve * 0.05, 1.0);
+            //result.normal = in_m * vec3(-text_dx * 0.1, -text_dy * 0.1, 1.0)
+            //              + not_in_m * vec3(-text_dx * curve * 0.05, -text_dy * curve * 0.05, 1.0);
+            //result.normal = normalize(result.normal);
+            //result.roughness = 0.1;
+            //result.anisotropy = normalize(uv_centered) * 0.1;
             
             #if CLEAR_COAT
             result.coat_normal = vec3(0.0, 0.0, 1.0);
