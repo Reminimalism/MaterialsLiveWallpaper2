@@ -53,6 +53,10 @@ object GLProgramConstants
             #define EXPOSURE 1.0
         #endif
         
+        #ifndef TONE_MAPPING_METHOD
+            #define TONE_MAPPING_METHOD 1
+        #endif
+        
         varying vec3 frag_normal;
         varying vec3 frag_tangent;
         varying vec3 frag_view;
@@ -167,24 +171,56 @@ object GLProgramConstants
             // Maybe not and just keep the linearity instead.
         }
         
+        vec3 apply_exposure(vec3 color)
+        {
+            #if TONE_MAPPING_METHOD == 1
+            return color * (float(EXPOSURE) * 1.2);
+            #else
+            return color * float(EXPOSURE);
+            #endif
+        }
+        
         vec3 tone_map(vec3 color)
         {
             float max_color = max(max(color.x, color.y), color.z);
             
-            // Method 1
+            // Method 1: Basic
             //float scale = 1.0 / (max_color + 0.5);
             //return color * scale + 1.5 * max(0.0, 0.67 - scale);
             
-            // Method 2
-            //float scale = 1.0 / (max_color + 1.0);
-            //float white = max_color / (max_color + 10.0);
-            //return (color * scale + white) / (scale + white);
+            #if TONE_MAPPING_METHOD == 0
             
-            // Method 3
+            // Method 2: Not so accurate with smooth gradients when overexposed
+            
+            float t = min(1.0, max_color);
+            // Gradual transition from linear
+            float scale = (1.0 - t) + t / (max_color + 0.25);
+            float white = max_color / (max_color + 6.0);
+            return color * scale * (1.0 + white) + white;
+            //return (color * scale + white) / (1.0 + white); // The above line is better
+            
+            #elif TONE_MAPPING_METHOD == 1
+            
+            // Method 3: Farly accurate with smooth gradients when overexposed
+            //           Slightly darker: 1.2 * exposure corrects it
+            
+            float max_color_1 = max(0.0, max_color - 1.0);
+            // Continuous but not gradual transition from linear
+            float scale = 0.8 * min(1.0, max_color) + 0.2 * max_color_1 / (max_color_1 + 0.2);
+            scale /= max_color;
+            float white = max_color / (max_color + 4.0);
+            white *= white;
+            return color * scale * (1.0 + white) + white;
+            
+            #else // TONE_MAPPING_METHOD
+            
+            // Method 4: Very crisp and accurate but not the smoothest gradients when overexposed
             float scale = 1.0 / max(1.0, max_color);
             float white = max(0.0, max_color - 1.0);
             white = white / (white + 2.0);
             return color * scale * (1.0 - white) + white;
+            
+            #endif // TONE_MAPPING_METHOD
         }
         
         vec3 calculate_specular(vec3 specular_color, float roughness, vec3 view, vec3 normal)
@@ -262,7 +298,7 @@ object GLProgramConstants
             
             color += surface.diffuse * sample_env(normal, 1.0);
             
-            color *= float(EXPOSURE);
+            color = apply_exposure(color);
             
             #if TONE_MAP
             color = tone_map(color);
