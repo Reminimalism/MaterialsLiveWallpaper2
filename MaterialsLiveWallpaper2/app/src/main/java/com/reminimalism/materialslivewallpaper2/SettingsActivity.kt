@@ -139,7 +139,7 @@ fun SettingsActivityView(modifier: Modifier = Modifier, context: Context? = null
                     "Exposure", "The brightness",
                     EXPOSURE_DEFAULT,
                     0f, 2f,
-                    100
+                    101
                 )
 
                 SettingsHeaderView("Performance")

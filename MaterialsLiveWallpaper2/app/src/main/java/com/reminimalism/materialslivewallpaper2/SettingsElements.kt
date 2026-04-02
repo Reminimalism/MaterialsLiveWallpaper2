@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.edit
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
@@ -73,7 +75,11 @@ fun SettingsToggleView(preferences: SharedPreferences?, key: String, title: Stri
                     preferences?.edit { putBoolean(key, it) }
                 }
             )
-        }
+        },
+        onReset = if (setting.value == defaultValue) null else ({
+            setting.value = defaultValue
+            preferences?.edit { putBoolean(key, defaultValue) }
+        })
     )
 }
 
@@ -97,7 +103,10 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
         mutableStateOf(false)
     }
     val setting = remember {
-        mutableStateOf(preferences?.getString(key, defaultOption) ?: defaultOption)
+        var value = preferences?.getString(key, defaultOption) ?: defaultOption
+        if (!options.containsKey(value))
+            value = defaultOption
+        mutableStateOf(value)
     }
 
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart))
@@ -107,7 +116,11 @@ fun SettingsOptionView(preferences: SharedPreferences?, key: String, title: Stri
             options[setting.value] ?: "",
             onClick = {
                 expanded.value = true
-            }
+            },
+            onReset = if (setting.value == defaultOption) null else ({
+                setting.value = defaultOption
+                preferences?.edit { putString(key, defaultOption) }
+            })
         )
 
         if (!useDialogForMenu)
@@ -199,8 +212,12 @@ fun SettingsSliderView(preferences: SharedPreferences?, key: String, title: Stri
     val setting = remember {
         mutableFloatStateOf(preferences?.getFloat(key, defaultValue) ?: defaultValue)
     }
+    val getSliderValue = {
+        val value = (setting.floatValue - rangeMin) / (rangeMax - rangeMin)
+        max(0f, min(1f, value))
+    }
     val sliderValue = remember {
-        mutableFloatStateOf((setting.floatValue - rangeMin) / (rangeMax - rangeMin))
+        mutableFloatStateOf(getSliderValue())
     }
 
     SettingsItemView(
@@ -216,12 +233,17 @@ fun SettingsSliderView(preferences: SharedPreferences?, key: String, title: Stri
             )
             {
                 Slider(
+                    //value = setting.floatValue, // Inaccurate
+                    //valueRange = rangeMin..rangeMax, // Inaccurate
                     value = sliderValue.floatValue,
-                    //valueRange = rangeMin..rangeMax,
-                    steps = steps,
+                    // For some reason it also include 2 extra steps on 2 ends
+                    steps = steps - 2,
                     onValueChange = {
+                        //setting.floatValue = it // Inaccurate
                         sliderValue.floatValue = it
-                        setting.floatValue = rangeMin + ((it * steps).roundToInt() / steps.toFloat()) * (rangeMax - rangeMin)
+                        setting.floatValue = rangeMin +
+                                ((it * (steps - 1)).roundToInt() / (steps - 1).toFloat()) *
+                                (rangeMax - rangeMin)
                     },
                     onValueChangeFinished = {
                         preferences?.edit { putFloat(key, setting.floatValue) }
@@ -229,7 +251,12 @@ fun SettingsSliderView(preferences: SharedPreferences?, key: String, title: Stri
                     modifier = Modifier.padding(8.dp, 0.dp)
                 )
             }
-        }
+        },
+        onReset = if (setting.floatValue == defaultValue) null else ({
+            setting.floatValue = defaultValue
+            sliderValue.floatValue = getSliderValue()
+            preferences?.edit { putFloat(key, defaultValue) }
+        })
     )
 }
 
@@ -257,7 +284,8 @@ fun SettingsIntSliderView(preferences: SharedPreferences?, key: String, title: S
                 Slider(
                     value = setting.intValue.toFloat(),
                     valueRange = rangeMin.toFloat()..rangeMax.toFloat(),
-                    steps = rangeMax - rangeMin + 1,
+                    // For some reason it also include 2 extra steps on 2 ends
+                    steps = rangeMax - rangeMin + 1 - 2,
                     onValueChange = {
                         setting.intValue = it.roundToInt()
                     },
@@ -267,7 +295,11 @@ fun SettingsIntSliderView(preferences: SharedPreferences?, key: String, title: S
                     modifier = Modifier.padding(8.dp, 0.dp)
                 )
             }
-        }
+        },
+        onReset = if (setting.intValue == defaultValue) null else ({
+            setting.intValue = defaultValue
+            preferences?.edit { putInt(key, defaultValue) }
+        })
     )
 }
 
@@ -275,7 +307,8 @@ fun SettingsIntSliderView(preferences: SharedPreferences?, key: String, title: S
 fun SettingsItemView(title: String, subtitle: String = "",
                      content: @Composable () -> Unit = {},
                      bottomContent: @Composable () -> Unit = {},
-                     onClick: () -> Unit = {})
+                     onClick: () -> Unit = {},
+                     onReset: (() -> Unit)? = null)
 {
     Column(
         Modifier
@@ -308,6 +341,18 @@ fun SettingsItemView(title: String, subtitle: String = "",
                         subtitle,
                         fontSize = 14.sp
                     )
+            }
+
+            if (onReset != null)
+            {
+                Box(
+                    Modifier
+                        .padding(16.dp)
+                        .clickable(onClick = onReset)
+                )
+                {
+                    Text(" ⟲ ", fontSize = 16.sp)
+                }
             }
 
             Box(
