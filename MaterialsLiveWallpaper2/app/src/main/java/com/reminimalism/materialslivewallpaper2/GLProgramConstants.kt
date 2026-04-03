@@ -57,6 +57,9 @@ object GLProgramConstants
             #define TONE_MAPPING_METHOD 1
         #endif
         
+        #define SDF_COUNT 8.0
+        #define SDF_SIZE (1.0 / SDF_COUNT)
+        
         varying vec3 frag_normal;
         varying vec3 frag_tangent;
         varying vec3 frag_view;
@@ -87,6 +90,12 @@ object GLProgramConstants
             float coat_specular;
             float coat_roughness;
             #endif
+        };
+        
+        struct SDFPoint
+        {
+            float value;
+            vec2  dv;
         };
         
         vec3 sample_env(vec3 dir, float roughness)
@@ -141,8 +150,29 @@ object GLProgramConstants
         {
             // App icon generation demo
             vec2 uv_centered = uv * 2.0 - 1.0;
-            float text = clamp(3.0 - 5.0 * abs(length(uv_centered)), 0.0, 1.0);
-            return text;
+            float result = clamp((0.3 * SDF_COUNT) - (SDF_COUNT/2.0) * abs(length(uv_centered)), 0.0, 1.0);
+            return result;
+        }
+        
+        SDFPoint get_sdf(vec2 uv)
+        {
+            SDFPoint result;
+            
+            // There seems to be no ddx/ddy/fwidth available so...
+            const float d = 0.00025;
+            vec4 d_values = vec4(
+                generate_o(uv + vec2(-d, -d)), // |. |
+                generate_o(uv + vec2(d, -d)),  // | .|
+                generate_o(uv + vec2(-d, d)),  // |' |
+                generate_o(uv + vec2(d, d))    // | '|
+            );
+            result.value = dot(d_values, vec4(0.25, 0.25, 0.25, 0.25));
+            result.dv = vec2(
+                dot(d_values.yw - d_values.xz, vec2(SDF_SIZE * 0.5/d, SDF_SIZE * 0.5/d)),
+                dot(d_values.zw - d_values.xy, vec2(SDF_SIZE * 0.5/d, SDF_SIZE * 0.5/d))
+            );
+            
+            return result;
         }
         
         Surface get_surface(vec2 uv)
@@ -179,33 +209,31 @@ object GLProgramConstants
             //uv = uv * 2.0 - 0.5;
             //vec2 uv_centered = uv * 2.0 - 1.0;
             //// There seems to be no ddx/ddy/fwidth available so...
-            //const float d = 0.002;
+            ////const float d = 0.002;
             ////vec4 d_values = vec4(
             ////    generate_M(uv + vec2(-d, -d)), // |. |
             ////    generate_M(uv + vec2(d, -d)),  // | .|
             ////    generate_M(uv + vec2(-d, d)),  // |' |
             ////    generate_M(uv + vec2(d, d))    // | '|
             ////);
-            //vec4 d_values = vec4(
-            //    generate_o(uv + vec2(-d, -d)), // |. |
-            //    generate_o(uv + vec2(d, -d)),  // | .|
-            //    generate_o(uv + vec2(-d, d)),  // |' |
-            //    generate_o(uv + vec2(d, d))    // | '|
-            //);
-            //float text_dx = (d_values.y - d_values.x + d_values.w - d_values.z) / (d * 2.0);
-            //float text_dy = (d_values.z - d_values.x + d_values.w - d_values.y) / (d * 2.0);
-            //float text = dot(d_values, vec4(0.25, 0.25, 0.25, 0.25));
-            //float in_m = float(text >= 0.5);
-            //float not_in_m = 1.0 - in_m;
-            //result.diffuse = vec3(not_in_m, not_in_m, not_in_m);
-            //result.specular *= in_m;
-            //float curve = text * 2.0 - 1.0;
+            ////SDFPoint sdf;
+            ////sdf.value = dot(d_values, vec4(0.25, 0.25, 0.25, 0.25));
+            ////sdf.dv.x = (d_values.y - d_values.x + d_values.w - d_values.z) / (d * 2.0);
+            ////sdf.dv.y = (d_values.z - d_values.x + d_values.w - d_values.y) / (d * 2.0);
+            //
+            //SDFPoint sdf = get_sdf(uv);
+            //
+            //float is_inside = float(sdf.value >= 0.5);
+            //float is_outside = 1.0 - is_inside;
+            //result.diffuse = vec3(is_outside, is_outside, is_outside);
+            //result.specular *= is_inside;
+            //float curve = sdf.value * 2.0 - 1.0;
             //curve = 1.0 - curve * curve;
             //curve *= curve;
-            ////result.normal = in_m * vec3(0.0, 0.0, 1.0)
-            ////              + not_in_m * vec3(-text_dx * curve * 0.05, -text_dy * curve * 0.05, 1.0);
-            //result.normal = in_m * vec3(-text_dx * 0.1, -text_dy * 0.1, 1.0)
-            //              + not_in_m * vec3(-text_dx * curve * 0.05, -text_dy * curve * 0.05, 1.0);
+            ////result.normal = is_inside * vec3(0.0, 0.0, 1.0)
+            ////              + is_outside * vec3(-sdf.dv * curve * 0.05, 1.0);
+            //result.normal = is_inside * vec3(-sdf.dv * 0.1, 1.0)
+            //              + is_outside * vec3(-sdf.dv * curve * 0.05, 1.0);
             //result.normal = normalize(result.normal);
             //result.roughness = 0.1;
             //result.anisotropy = normalize(uv_centered) * 0.1;
