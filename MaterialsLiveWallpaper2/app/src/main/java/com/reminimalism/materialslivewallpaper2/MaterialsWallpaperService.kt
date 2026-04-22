@@ -39,12 +39,12 @@ class MaterialsWallpaperService : WallpaperService()
 
             val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val configurationInfo = activityManager.deviceConfigurationInfo
-            val supportsES20 = configurationInfo.reqGlEsVersion >= 0x20000
+            val supportsESVersion = configurationInfo.reqGlEsVersion >= GLVersion
 
-            if (!supportsES20)
+            if (!supportsESVersion)
                 return
 
-            glSurfaceView?.setEGLContextClientVersion(2)
+            glSurfaceView?.setEGLContextClientVersion(GLVersionMajor)
             glSurfaceView?.preserveEGLContextOnPause = true
             renderer = MaterialsWallpaperRenderer(this@MaterialsWallpaperService)
             glSurfaceView?.setRenderer(renderer)

@@ -1,6 +1,5 @@
 package com.reminimalism.materialslivewallpaper2
 
-import android.opengl.GLES20
 import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getFloat
 import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getInt
 import com.reminimalism.materialslivewallpaper2.PreferencesComponent.Companion.getString
@@ -80,7 +79,7 @@ class RendererComponent : Component()
 
     override fun update()
     {
-        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT or GLES20.GL_COLOR_BUFFER_BIT)
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT or GL.GL_COLOR_BUFFER_BIT)
         program?.use()
         program?.setParams(
             transform,

@@ -1,7 +1,5 @@
 package com.reminimalism.materialslivewallpaper2
 
-import android.opengl.GLES20
-
 class GLProgram(vertexShader: String, fragmentShader: String)
 {
     private val position = "position"
@@ -31,16 +29,16 @@ class GLProgram(vertexShader: String, fragmentShader: String)
 
     fun use()
     {
-        GLES20.glUseProgram(programHandle)
+        GL.glUseProgram(programHandle)
     }
 
     fun setParams(transform: FloatArray, rotation: FloatArray, fovTangent: Float)
     {
         if (programHandle == 0)
             return
-        GLES20.glUniformMatrix4fv(transformLocation, 1, false, transform, 0)
-        GLES20.glUniformMatrix3fv(rotationLocation, 1, true, rotation, 0)
-        GLES20.glUniform1f(fovTangentLocation, fovTangent)
+        GL.glUniformMatrix4fv(transformLocation, 1, false, transform, 0)
+        GL.glUniformMatrix3fv(rotationLocation, 1, true, rotation, 0)
+        GL.glUniform1f(fovTangentLocation, fovTangent)
     }
 
     fun draw(mesh: GLMesh)
@@ -54,7 +52,7 @@ class GLProgram(vertexShader: String, fragmentShader: String)
     {
         if (programHandle == 0)
             return
-        GLES20.glDeleteProgram(programHandle)
+        GL.glDeleteProgram(programHandle)
         programHandle = 0
     }
 
@@ -97,83 +95,83 @@ class GLProgram(vertexShader: String, fragmentShader: String)
         }
         else
         {
-            positionLocation = GLES20.glGetAttribLocation(programHandle, position)
-            normalLocation = GLES20.glGetAttribLocation(programHandle, normal)
-            tangentLocation = GLES20.glGetAttribLocation(programHandle, tangent)
-            uvLocation = GLES20.glGetAttribLocation(programHandle, uv)
+            positionLocation = GL.glGetAttribLocation(programHandle, position)
+            normalLocation = GL.glGetAttribLocation(programHandle, normal)
+            tangentLocation = GL.glGetAttribLocation(programHandle, tangent)
+            uvLocation = GL.glGetAttribLocation(programHandle, uv)
 
-            transformLocation = GLES20.glGetUniformLocation(programHandle, transform)
-            rotationLocation = GLES20.glGetUniformLocation(programHandle, rotation)
-            fovTangentLocation = GLES20.glGetUniformLocation(programHandle, fovTangent)
+            transformLocation = GL.glGetUniformLocation(programHandle, transform)
+            rotationLocation = GL.glGetUniformLocation(programHandle, rotation)
+            fovTangentLocation = GL.glGetUniformLocation(programHandle, fovTangent)
         }
     }
 
     private fun setupProgram(vertexShader: String, fragmentShader: String)
     {
-        val vertHandle = compileShader(vertexShader, GLES20.GL_VERTEX_SHADER)
-        val fragHandle = compileShader(fragmentShader, GLES20.GL_FRAGMENT_SHADER)
+        val vertHandle = compileShader(vertexShader, GL.GL_VERTEX_SHADER)
+        val fragHandle = compileShader(fragmentShader, GL.GL_FRAGMENT_SHADER)
 
         if (vertHandle == 0 || fragHandle == 0)
         {
             programHandle = 0
             if (vertHandle != 0)
-                GLES20.glDeleteShader(vertHandle)
+                GL.glDeleteShader(vertHandle)
             if (fragHandle != 0)
-                GLES20.glDeleteShader(fragHandle)
+                GL.glDeleteShader(fragHandle)
             return
         }
 
-        programHandle = GLES20.glCreateProgram()
+        programHandle = GL.glCreateProgram()
         if (programHandle == 0)
         {
-            GLES20.glDeleteShader(vertHandle)
-            GLES20.glDeleteShader(fragHandle)
+            GL.glDeleteShader(vertHandle)
+            GL.glDeleteShader(fragHandle)
             Logger.logInternalError("Could not create program")
             return
         }
 
-        GLES20.glAttachShader(programHandle, vertHandle)
-        GLES20.glAttachShader(programHandle, fragHandle)
+        GL.glAttachShader(programHandle, vertHandle)
+        GL.glAttachShader(programHandle, fragHandle)
 
-        GLES20.glBindAttribLocation(programHandle, 0, position)
-        GLES20.glBindAttribLocation(programHandle, 1, normal)
-        GLES20.glBindAttribLocation(programHandle, 2, tangent)
-        GLES20.glBindAttribLocation(programHandle, 3, uv)
+        GL.glBindAttribLocation(programHandle, 0, position)
+        GL.glBindAttribLocation(programHandle, 1, normal)
+        GL.glBindAttribLocation(programHandle, 2, tangent)
+        GL.glBindAttribLocation(programHandle, 3, uv)
 
-        GLES20.glLinkProgram(programHandle)
+        GL.glLinkProgram(programHandle)
 
         val linkStatus = IntArray(1)
-        GLES20.glGetProgramiv(programHandle, GLES20.GL_LINK_STATUS, linkStatus, 0)
+        GL.glGetProgramiv(programHandle, GL.GL_LINK_STATUS, linkStatus, 0)
 
         if (linkStatus[0] == 0)
         {
-            GLES20.glDeleteProgram(programHandle)
+            GL.glDeleteProgram(programHandle)
             programHandle = 0
             Logger.logInternalError("Error linking program.")
         }
 
-        GLES20.glDeleteShader(vertHandle)
-        GLES20.glDeleteShader(fragHandle)
+        GL.glDeleteShader(vertHandle)
+        GL.glDeleteShader(fragHandle)
     }
 
     private fun compileShader(source: String, shaderType: Int): Int
     {
-        val shaderHandle = GLES20.glCreateShader(shaderType)
+        val shaderHandle = GL.glCreateShader(shaderType)
         if (shaderHandle == 0)
         {
-            val error = GLES20.glGetError()
+            val error = GL.glGetError()
             Logger.logInternalError("Could not create shader: $error")
             return 0
         }
-        GLES20.glShaderSource(shaderHandle, source)
-        GLES20.glCompileShader(shaderHandle)
+        GL.glShaderSource(shaderHandle, source)
+        GL.glCompileShader(shaderHandle)
         val compileStatus = IntArray(1)
-        GLES20.glGetShaderiv(shaderHandle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
+        GL.glGetShaderiv(shaderHandle, GL.GL_COMPILE_STATUS, compileStatus, 0)
         if (compileStatus[0] == 0)
         {
-            val error = GLES20.glGetShaderInfoLog(shaderHandle)
+            val error = GL.glGetShaderInfoLog(shaderHandle)
             Logger.logUserError("Shader compile error: $error")
-            GLES20.glDeleteShader(shaderHandle)
+            GL.glDeleteShader(shaderHandle)
             return 0
         }
         return shaderHandle

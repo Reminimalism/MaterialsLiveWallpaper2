@@ -1,6 +1,5 @@
 package com.reminimalism.materialslivewallpaper2
 
-import android.opengl.GLES20
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -110,12 +109,12 @@ class GLMesh(
         bindFloatVertexBuffer(program.getTangentLocation(), tangentsIndex, 3)
         bindFloatVertexBuffer(program.getUVLocation(), uvsIndex, 2)
 
-        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, bufferObjects[indicesIndex])
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, bufferObjects[indicesIndex])
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indicesSize, GLES20.GL_UNSIGNED_SHORT, 0)
+        GL.glDrawElements(GL.GL_TRIANGLES, indicesSize, GL.GL_UNSIGNED_SHORT, 0)
 
-        GLES20.glDisableVertexAttribArray(program.getPositionLocation())
-        GLES20.glDisableVertexAttribArray(program.getUVLocation())
+        GL.glDisableVertexAttribArray(program.getPositionLocation())
+        GL.glDisableVertexAttribArray(program.getUVLocation())
     }
 
     fun destroy()
@@ -123,21 +122,21 @@ class GLMesh(
         if (isCleanedUp)
             return
         isCleanedUp = true
-        GLES20.glDeleteBuffers(bufferObjects.size, bufferObjects, 0)
+        GL.glDeleteBuffers(bufferObjects.size, bufferObjects, 0)
     }
 
     fun isDestroyed(): Boolean = isCleanedUp
 
     private fun bindFloatVertexBuffer(programAttribLocation: Int, bufferObjectIndex: Int, vertexSize: Int)
     {
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferObjects[bufferObjectIndex])
-        GLES20.glVertexAttribPointer(programAttribLocation, vertexSize, GLES20.GL_FLOAT, false, vertexSize * 4, 0)
-        GLES20.glEnableVertexAttribArray(programAttribLocation)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, bufferObjects[bufferObjectIndex])
+        GL.glVertexAttribPointer(programAttribLocation, vertexSize, GL.GL_FLOAT, false, vertexSize * 4, 0)
+        GL.glEnableVertexAttribArray(programAttribLocation)
     }
 
     private fun createBuffers()
     {
-        GLES20.glGenBuffers(bufferObjects.size, bufferObjects, 0)
+        GL.glGenBuffers(bufferObjects.size, bufferObjects, 0)
     }
 
     private fun setupBuffers(
@@ -180,7 +179,7 @@ class GLMesh(
             .put(data)
             .position(0)
 
-        setupGLBufferObject(bufferObjectIndex, GLES20.GL_ARRAY_BUFFER, buffer, data.size * 4)
+        setupGLBufferObject(bufferObjectIndex, GL.GL_ARRAY_BUFFER, buffer, data.size * 4)
 
         buffer.clear()
     }
@@ -193,7 +192,7 @@ class GLMesh(
             .put(indices)
             .position(0)
 
-        setupGLBufferObject(indicesIndex, GLES20.GL_ELEMENT_ARRAY_BUFFER, indexBuffer, indices.size * 2)
+        setupGLBufferObject(indicesIndex, GL.GL_ELEMENT_ARRAY_BUFFER, indexBuffer, indices.size * 2)
 
         indexBuffer.clear()
 
@@ -202,8 +201,8 @@ class GLMesh(
 
     private fun setupGLBufferObject(bufferObjectIndex: Int, target: Int, buffer: Buffer, size: Int)
     {
-        GLES20.glBindBuffer(target, bufferObjects[bufferObjectIndex])
-        GLES20.glBufferData(target, size, buffer, GLES20.GL_STATIC_DRAW)
-        GLES20.glBindBuffer(target, 0)
+        GL.glBindBuffer(target, bufferObjects[bufferObjectIndex])
+        GL.glBufferData(target, size, buffer, GL.GL_STATIC_DRAW)
+        GL.glBindBuffer(target, 0)
     }
 }
