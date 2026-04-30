@@ -45,7 +45,7 @@ class MaterialsWallpaperRenderer(context: Context) : GLSurfaceView.Renderer
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int)
     {
-        GL.glViewport(0, 0, width, height)
+        GLFramebufferManager.updateScreenSize(width, height)
         componentContainer.getComponent<RendererComponent>()?.updateSurface(width, height)
     }
 
