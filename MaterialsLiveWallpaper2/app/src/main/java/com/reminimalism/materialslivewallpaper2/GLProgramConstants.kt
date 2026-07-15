@@ -258,7 +258,7 @@ object GLProgramConstants
         vec3 apply_exposure(vec3 color)
         {
             #if TONE_MAPPING_METHOD == 1
-            return color * (float(EXPOSURE) * 1.2);
+            return color * (float(EXPOSURE) * 1.25);
             #else
             return color * float(EXPOSURE);
             #endif
@@ -285,16 +285,16 @@ object GLProgramConstants
             
             #elif TONE_MAPPING_METHOD == 1
             
-            // Method 3: Farly accurate with smooth gradients when overexposed
-            //           Slightly darker: 1.2 * exposure corrects it
+            // Method 3: Accurate with smooth gradients when overexposed
+            //           Slightly darker: 1.25 * exposure corrects it
             
             float max_color_1 = max(0.0, max_color - 1.0);
             // Continuous but not gradual transition from linear
             float scale = 0.8 * min(1.0, max_color) + 0.2 * max_color_1 / (max_color_1 + 0.2);
-            scale /= max_color;
-            float white = max_color / (max_color + 4.0);
+            scale /= max(max_color, 0.001); // Avoid division by zero for black pixels
+            float white = max_color_1 / (max_color_1 + 1.0);
             white *= white;
-            return color * scale * (1.0 + white) + white;
+            return color * scale * (1.0 - white) + white;
             
             #else // TONE_MAPPING_METHOD
             
