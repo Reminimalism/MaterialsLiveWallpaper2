@@ -1,17 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
     namespace = "com.reminimalism.materialslivewallpaper2"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.reminimalism.materialslivewallpaper2"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "0.1"
 
@@ -30,9 +29,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
