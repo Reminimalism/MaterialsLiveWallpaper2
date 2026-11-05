@@ -58,7 +58,8 @@ fun SettingsHeaderView(text: String)
 @Composable
 fun SettingsToggleView(preferences: SharedPreferences?, key: String, title: String,
                        subtitleOn: String = "", subtitleOff: String = "",
-                       defaultValue: Boolean = false)
+                       defaultValue: Boolean = false,
+                       onToggle: (Boolean) -> Unit = {})
 {
     val setting = remember {
         mutableStateOf(preferences?.getBoolean(key, defaultValue) ?: defaultValue)
@@ -73,12 +74,14 @@ fun SettingsToggleView(preferences: SharedPreferences?, key: String, title: Stri
                 onCheckedChange = {
                     setting.value = it
                     preferences?.edit { putBoolean(key, it) }
+                    onToggle(it)
                 }
             )
         },
         onReset = if (setting.value == defaultValue) null else ({
             setting.value = defaultValue
             preferences?.edit { putBoolean(key, defaultValue) }
+            onToggle(defaultValue)
         })
     )
 }
